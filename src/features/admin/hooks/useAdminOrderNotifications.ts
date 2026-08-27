@@ -71,7 +71,7 @@ export const useAdminOrderNotifications = () => {
     }, REFRESH_INTERVAL);
 
     const token = tokenStorage.getAccessToken();
-    const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    const apiUrl = import.meta.env.API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
     const socketUrl = import.meta.env.VITE_SOCKET_URL || apiUrl.replace(/\/api\/?$/, '');
     const socketPath = import.meta.env.VITE_SOCKET_PATH || '/socket.io';
     const socket = io(socketUrl, {
