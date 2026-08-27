@@ -27,8 +27,9 @@ const normalizeProductReviews = (response: ProductReviewsApiResponse): ProductRe
 
   if (!meta?.ratingBreakdown) {
     reviews.forEach((review) => {
-      const rating = Math.min(5, Math.max(1, Math.round(review.rating))) as keyof typeof ratingBreakdown;
-      ratingBreakdown[String(rating) as keyof typeof ratingBreakdown] += 1;
+      const rating = Math.min(5, Math.max(1, Math.round(review.rating)));
+      const ratingKey = String(rating) as keyof typeof ratingBreakdown;
+      ratingBreakdown[ratingKey] += 1;
     });
   }
 

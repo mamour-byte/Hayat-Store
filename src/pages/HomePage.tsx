@@ -2,7 +2,7 @@ import React from 'react';
 import { useCategories, useProducts } from '../features/products/api/useProducts';
 import { ProductGrid } from '../features/products/components/ProductGrid';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Truck, ShieldCheck, Headphones } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Slider from '../components/layout/Slider';
 import type { SlideItem } from '../components/layout/Slider';
 

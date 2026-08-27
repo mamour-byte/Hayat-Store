@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Wallet, Banknote, Lock } from 'lucide-react';
+import { Banknote, Lock } from 'lucide-react';
 import { PaymentProvider } from '../../../types/enums';
 
 interface PaymentMethodSelectorProps {

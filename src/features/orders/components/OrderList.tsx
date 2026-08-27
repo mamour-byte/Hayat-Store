@@ -55,8 +55,8 @@ export const OrderList: React.FC = () => {
                     {formatDate(order.createdAt)}
                   </p>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {/* <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
-                    <Badge className={paymentBadge.className}>{paymentBadge.label}</Badge> */}
+                    <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
+                    <Badge className={paymentBadge.className}>{paymentBadge.label}</Badge>
                   </div>
                 </div>
                 <span className="font-bold text-[#1a1a1a] whitespace-nowrap">
