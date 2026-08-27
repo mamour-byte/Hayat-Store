@@ -1,0 +1,79 @@
+export const API_ENDPOINTS = {
+  AUTH: {
+    REGISTER: '/auth/register',
+    LOGIN: '/auth/login',
+    REFRESH: '/auth/refresh',
+    LOGOUT: '/auth/logout',
+    ME: '/auth/me',
+  },
+  PRODUCTS: {
+    LIST: '/products',
+    BY_SLUG: (slug: string) => `/products/slug/${slug}`,
+    BY_ID: (id: string) => `/products/${id}`,
+  },
+  CATEGORIES: {
+    LIST: '/categories',
+    BY_ID: (id: string) => `/categories/${id}`,
+    CREATE: '/categories',
+    UPDATE: (id: string) => `/categories/${id}`,
+    DELETE: (id: string) => `/categories/${id}`,
+  },
+  BRANDS: {
+    LIST: '/brands',
+  },
+  CART: {
+    GET: '/cart',
+    ADD_ITEM: '/cart/items',
+    UPDATE_ITEM: (itemId: string) => `/cart/items/${itemId}`,
+    DELETE_ITEM: (itemId: string) => `/cart/items/${itemId}`,
+    CLEAR: '/cart',
+    MERGE: '/cart/merge',
+  },
+  COUPONS: {
+    VALIDATE: '/coupons/validate',
+    ADMIN_LIST: '/coupons',
+    ADMIN_CREATE: '/coupons',
+    ADMIN_UPDATE: (id: string) => `/coupons/${id}`,
+    ADMIN_DELETE: (id: string) => `/coupons/${id}`,
+  },
+  SHIPPING: {
+    METHODS: '/shipping/methods',
+    ZONES: '/shipping/zones',
+    ZONE: (id: string) => `/shipping/zones/${id}`,
+    ADMIN_UPDATE_SHIPMENT: (id: string) => `/shipping/shipments/${id}/status`,
+  },
+  ORDERS: {
+    CREATE: '/orders',
+    MY_ORDERS: '/orders/my-orders',
+    CANCEL_MY_ORDER: (id: string) => `/orders/my-orders/${id}/cancel`,
+    ADMIN_LIST: '/orders',
+    ADMIN_UPDATE_STATUS: (id: string) => `/orders/${id}/status`,
+    ADMIN_UPDATE_PAYMENT_STATUS: (id: string) => `/orders/${id}/payment-status`,
+  },
+  PAYMENTS: {
+    INITIATE: '/payments/initiate',
+  },
+  REVIEWS: {
+    CREATE: '/reviews',
+    BY_PRODUCT: (productId: string) => `/reviews/product/${productId}`,
+    ADMIN_LIST: '/reviews/admin',
+    ADMIN_UPDATE_STATUS: (id: string) => `/reviews/${id}/status`,
+    ADMIN_DELETE: (id: string) => `/reviews/${id}`,
+  },
+  USERS: {
+    ADMIN_LIST: '/users',
+    ADMIN_UPDATE: (id: string) => `/users/${id}`,
+  },
+  STATS: {
+    DASHBOARD: '/stats/dashboard',
+    SALES: '/stats/sales',
+    PRODUCTS: '/stats/products',
+  },
+  NOTIFICATIONS: {
+    LIST: '/notifications',
+    UNREAD_COUNT: '/notifications/unread-count',
+    MARK_READ: (id: string) => `/notifications/${id}/read`,
+    MARK_ALL_READ: '/notifications/mark-all-read',
+    DELETE: (id: string) => `/notifications/${id}`,
+  },
+};
