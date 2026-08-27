@@ -40,6 +40,7 @@ const sliderItems: SlideItem[] = [
 export const HomePage: React.FC = () => {
   const { data: categories } = useCategories();
   const { data: featuredProducts, isLoading } = useProducts({ limit: 8, status: 'ACTIVE' as any });
+  const categoryList = Array.isArray(categories) ? categories : [];
 
   return (
     <div className="space-y-12 py-6">
@@ -96,7 +97,7 @@ export const HomePage: React.FC = () => {
       </section> */}
 
       {/* Categories Minimalist */}
-      {categories && categories.length > 0 && (
+      {categoryList.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-[#1a1a1a]">Catégories</h2>
@@ -105,7 +106,7 @@ export const HomePage: React.FC = () => {
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {categories.slice(0, 4).map((cat) => (
+            {categoryList.slice(0, 4).map((cat) => (
               <Link
                 key={cat.id}
                 to={`/products?categoryId=${cat.id}`}
