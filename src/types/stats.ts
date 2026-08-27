@@ -35,6 +35,8 @@ export interface TopProductStat {
   quantity?: number;
   revenue?: number;
   totalRevenue?: number;
+  soldQuantity?: number;
+  totalQuantity?: number;
 }
 
 export interface StockAlertStat {

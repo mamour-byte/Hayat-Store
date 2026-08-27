@@ -62,6 +62,13 @@ export const LoginForm: React.FC = () => {
               {...register('password')}
             />
 
+            <Link
+              to="/forgot-password"
+              className="block text-right text-xs text-[#008060] hover:underline font-semibold"
+            >
+              Mot de passe oublié ?
+            </Link>
+
             <Button
               type="submit"
               className="w-full mt-2"

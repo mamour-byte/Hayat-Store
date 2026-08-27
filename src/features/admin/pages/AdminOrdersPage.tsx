@@ -79,15 +79,16 @@ export const AdminOrdersPage: React.FC = () => {
     switch (status) {
       case OrderStatus.DELIVERED:
         return <span className="bg-[#f0f9f6] text-[#008060] px-2.5 py-1 rounded-full text-xs font-bold border border-[#008060]/20">Livrée</span>;
-      case OrderStatus.SHIPPED:
+      case OrderStatus.IN_DELIVERY:
         return <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-xs font-bold border border-blue-200">Expédiée</span>;
-      case OrderStatus.PROCESSING:
       case OrderStatus.CONFIRMED:
         return <span className="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold border border-amber-200">En cours</span>;
       case OrderStatus.PENDING:
         return <span className="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full text-xs font-bold border border-slate-200">En attente</span>;
       case OrderStatus.CANCELLED:
         return <span className="bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-xs font-bold border border-rose-200">Annulée</span>;
+      case OrderStatus.REFUNDED:
+        return <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full text-xs font-bold border border-slate-200">Remboursée</span>;
       default:
         return <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full text-xs font-bold">{status}</span>;
     }
@@ -148,8 +149,7 @@ export const AdminOrdersPage: React.FC = () => {
             { id: 'ALL', label: 'Toutes' },
             { id: OrderStatus.PENDING, label: 'En attente' },
             { id: OrderStatus.CONFIRMED, label: 'Confirmées' },
-            { id: OrderStatus.PROCESSING, label: 'En cours' },
-            { id: OrderStatus.SHIPPED, label: 'Expédiées' },
+            { id: OrderStatus.IN_DELIVERY, label: 'En livraison' },
             { id: OrderStatus.DELIVERED, label: 'Livrées' },
             { id: OrderStatus.CANCELLED, label: 'Annulées' },
           ].map((tab) => (
@@ -259,10 +259,10 @@ export const AdminOrdersPage: React.FC = () => {
                       >
                         <option value={OrderStatus.PENDING}>En attente</option>
                         <option value={OrderStatus.CONFIRMED}>Confirmée</option>
-                        <option value={OrderStatus.PROCESSING}>En cours</option>
-                        <option value={OrderStatus.SHIPPED}>Expédiée</option>
+                        <option value={OrderStatus.IN_DELIVERY}>En livraison</option>
                         <option value={OrderStatus.DELIVERED}>Livrée</option>
                         <option value={OrderStatus.CANCELLED}>Annulée</option>
+                        <option value={OrderStatus.REFUNDED}>Remboursée</option>
                       </select>
                     </td>
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">

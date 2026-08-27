@@ -18,10 +18,8 @@ export const getOrderStatusBadge = (status: OrderStatus) => {
       return { label: 'En attente', className: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300' };
     case OrderStatus.CONFIRMED:
       return { label: 'Confirmée', className: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300' };
-    case OrderStatus.PROCESSING:
-      return { label: 'En préparation', className: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-300' };
-    case OrderStatus.SHIPPED:
-      return { label: 'Expédiée', className: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300' };
+    case OrderStatus.IN_DELIVERY:
+      return { label: 'En livraison', className: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300' };
     case OrderStatus.DELIVERED:
       return { label: 'Livrée', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300' };
     case OrderStatus.CANCELLED:

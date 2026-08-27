@@ -87,29 +87,71 @@ export const AdminDashboardPage: React.FC = () => {
     switch (status) {
       case OrderStatus.DELIVERED:
         return <span className="bg-[#f0f9f6] text-[#008060] px-2.5 py-0.5 rounded-full text-xs font-semibold border border-[#008060]/20">Livrée</span>;
-      case OrderStatus.SHIPPED:
-        return <span className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-blue-200">Expédiée</span>;
-      case OrderStatus.PROCESSING:
+      case OrderStatus.IN_DELIVERY:
+        return <span className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-blue-200">En livraison</span>;
       case OrderStatus.CONFIRMED:
         return <span className="bg-amber-50 text-amber-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-amber-200">En cours</span>;
       case OrderStatus.PENDING:
         return <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-slate-200">En attente</span>;
       case OrderStatus.CANCELLED:
         return <span className="bg-rose-50 text-rose-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-rose-200">Annulée</span>;
+      case OrderStatus.REFUNDED:
+        return <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-slate-200">Remboursée</span>;
       default:
         return <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full text-xs font-semibold">{status}</span>;
     }
   };
 
-  const topProducts = (stats?.sales.topProducts ?? stats?.products.topProducts ?? []).slice(0, 7);
-  const totalTopProductUnits = topProducts.reduce(
-    (total, product) => total + (product.unitsSold ?? product.quantity ?? 0),
-    0,
-  );
-  const pieSegments = topProducts.reduce<{ segments: string[]; offset: number }>(
+  const topProducts = (stats?.sales.topProducts?.length
+    ? stats.sales.topProducts
+    : stats?.products.topProducts ?? []
+  ).slice(0, 7);
+  const toNumber = (value: unknown): number => {
+    const number = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(number) ? number : 0;
+  };
+  const getProductUnits = (product: (typeof topProducts)[number]): number => {
+    const productData = product as typeof product & {
+      units?: number | string;
+      quantitySold?: number | string;
+      totalUnits?: number | string;
+      totalQuantitySold?: number | string;
+      totalSold?: number | string;
+      count?: number | string;
+      salesCount?: number | string;
+    };
+    return toNumber(
+      productData.unitsSold ??
+        productData.quantity ??
+        productData.soldQuantity ??
+        productData.totalQuantity ??
+        productData.quantitySold ??
+        productData.totalQuantitySold ??
+        productData.totalUnits ??
+        productData.units ??
+        productData.totalSold ??
+        productData.salesCount ??
+        productData.count,
+    );
+  };
+  const fallbackProducts = (stats?.recentOrders ?? []).reduce<typeof topProducts>((products, order) => {
+    const items = Array.isArray(order.items) ? order.items : [];
+    items.forEach((item) => {
+      const existing = products.find((product) => product.productId === item.productId || product.name === item.productName);
+      if (existing) {
+        existing.unitsSold = getProductUnits(existing) + toNumber(item.quantity);
+      } else {
+        products.push({ productId: item.productId, name: item.productName, unitsSold: toNumber(item.quantity), revenue: toNumber(item.total) });
+      }
+    });
+    return products;
+  }, []);
+  const chartProducts = topProducts.some((product) => getProductUnits(product) > 0) ? topProducts : fallbackProducts;
+  const chartProductUnits = chartProducts.reduce((total, product) => total + getProductUnits(product), 0);
+  const pieSegments = chartProducts.reduce<{ segments: string[]; offset: number }>(
     (result, product, index) => {
-      const unitsSold = product.unitsSold ?? product.quantity ?? 0;
-      const nextOffset = result.offset + (totalTopProductUnits ? (unitsSold / totalTopProductUnits) * 100 : 0);
+      const unitsSold = getProductUnits(product);
+      const nextOffset = result.offset + (chartProductUnits ? (unitsSold / chartProductUnits) * 100 : 0);
       return {
         segments: [
           ...result.segments,
@@ -317,14 +359,16 @@ export const AdminDashboardPage: React.FC = () => {
                 ) : (
                   <div className="flex items-end justify-between gap-2 h-48 px-2 border-b border-[#e1e3e5] pb-4 overflow-x-auto">
                     {stats.sales.timeline.map((item) => {
-                      const maxRevenue = Math.max(...stats.sales.timeline.map((timelineItem) => timelineItem.revenue || 1));
-                      const heightPercent = maxRevenue > 0 ? Math.max(15, Math.round((item.revenue / maxRevenue) * 100)) : 10;
+                      const values = stats.sales.timeline.map((timelineItem) => Math.max(toNumber(timelineItem.revenue), toNumber(timelineItem.unitsSold)));
+                      const maxValue = Math.max(...values, 1);
+                      const value = Math.max(toNumber(item.revenue), toNumber(item.unitsSold));
+                      const heightPercent = value > 0 ? Math.max(8, Math.round((value / maxValue) * 100)) : 2;
                       return (
-                        <div key={item.date} className="flex-1 min-w-[36px] flex flex-col items-center gap-2 group relative">
+                        <div key={item.date} className="flex-1 min-w-[36px] h-full flex flex-col items-center gap-2 group relative">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-10 bg-[#1a1a1a] text-white text-[10px] py-1 px-2 rounded-md font-bold whitespace-nowrap shadow-md z-10">
                             {formatPrice(item.revenue)} ({item.orders} cmd)
                           </div>
-                          <div className="w-full bg-[#f0f9f6] group-hover:bg-[#008060]/20 rounded-t-xl h-full flex items-end overflow-hidden p-1 transition-colors">
+                          <div className="w-full flex-1 min-h-0 bg-[#f0f9f6] group-hover:bg-[#008060]/20 rounded-t-xl flex items-end overflow-hidden p-1 transition-colors">
                             <div
                               className="w-full bg-[#008060] group-hover:bg-[#006e52] rounded-t-lg transition-all duration-500"
                               style={{ height: `${heightPercent}%` }}
@@ -346,7 +390,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <h2 className="font-bold text-[#1a1a1a] text-base">Répartition des ventes</h2>
                 <p className="text-xs text-[#6d7175]">Part des unités vendues par produit</p>
               </div>
-              {topProducts.length === 0 ? (
+              {chartProducts.length === 0 || chartProductUnits === 0 ? (
                 <div className="h-48 flex items-center justify-center text-xs text-[#6d7175]">Aucune donnée disponible.</div>
               ) : (
                 <div className="flex flex-col items-center gap-5">
@@ -357,13 +401,13 @@ export const AdminDashboardPage: React.FC = () => {
                     role="img"
                   />
                   <div className="w-full space-y-2">
-                    {topProducts.map((product, index) => (
+                    {chartProducts.map((product, index) => (
                       <div key={product.id ?? product.productId ?? `${product.name}-${index}`} className="flex items-center justify-between gap-2 text-xs">
                         <span className="flex min-w-0 items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ['#008060', '#1d8cf8', '#f59e0b', '#e11d48', '#7c3aed', '#0f766e', '#64748b'][index] }} />
                           <span className="truncate text-[#6d7175]">{product.name ?? product.productName ?? 'Produit sans nom'}</span>
                         </span>
-                        <span className="shrink-0 font-bold text-[#1a1a1a]">{product.unitsSold ?? product.quantity ?? 0}</span>
+                        <span className="shrink-0 font-bold text-[#1a1a1a]">{getProductUnits(product)}</span>
                       </div>
                     ))}
                   </div>

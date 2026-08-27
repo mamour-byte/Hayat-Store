@@ -3,6 +3,8 @@ import type {
   LoginCredentials,
   RegisterPayload,
   RefreshTokenPayload,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
   User,
 } from '../../../types';
 import { apiClient } from '../../../lib/api/client';
@@ -33,5 +35,13 @@ export const authService = {
   getMe: async (): Promise<User> => {
     const { data } = await apiClient.get<User>(API_ENDPOINTS.AUTH.ME);
     return data;
+  },
+
+  forgotPassword: async (payload: ForgotPasswordPayload): Promise<void> => {
+    await apiClient.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, payload);
+  },
+
+  resetPassword: async (payload: ResetPasswordPayload): Promise<void> => {
+    await apiClient.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, payload);
   },
 };

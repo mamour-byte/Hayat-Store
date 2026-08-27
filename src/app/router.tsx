@@ -12,6 +12,8 @@ import { CheckoutSuccessPage } from '../features/checkout/pages/CheckoutSuccessP
 import { MyOrdersPage } from '../features/orders/pages/MyOrdersPage';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage';
+import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage';
 import { ProfilePage } from '../features/account/pages/ProfilePage';
 import { ContactPage } from '../pages/ContactPage';
 
@@ -39,6 +41,8 @@ export const router = createBrowserRouter([
       { path: 'contact', element: <ContactPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
+      { path: 'forgot-password', element: <ForgotPasswordPage /> },
+      { path: 'reset-password', element: <ResetPasswordPage /> },
       {
         path: 'account',
         element: <ProtectedRoute allowedRoles={[UserRole.CUSTOMER, UserRole.ADMIN, UserRole.STAFF]} />,

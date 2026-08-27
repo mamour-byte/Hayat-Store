@@ -40,3 +40,12 @@ export interface RegisterPayload {
 export interface RefreshTokenPayload {
   refreshToken: string;
 }
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+}
