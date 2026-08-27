@@ -56,7 +56,7 @@ export const API_ENDPOINTS = {
   REVIEWS: {
     CREATE: '/reviews',
     BY_PRODUCT: (productId: string) => `/reviews/product/${productId}`,
-    ADMIN_LIST: '/reviews/admin',
+    ADMIN_LIST: '/reviews',
     ADMIN_UPDATE_STATUS: (id: string) => `/reviews/${id}/status`,
     ADMIN_DELETE: (id: string) => `/reviews/${id}`,
   },
