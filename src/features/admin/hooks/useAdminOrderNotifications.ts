@@ -71,7 +71,7 @@ export const useAdminOrderNotifications = () => {
     }, REFRESH_INTERVAL);
 
     const token = tokenStorage.getAccessToken();
-    const apiUrl = import.meta.env.API_URL || '/api';
+    const apiUrl = import.meta.env.VITE_API_URL || '/api';
     const socketUrl = import.meta.env.SOCKET_URL || apiUrl.replace(/\/api\/?$/, '');
     const socketPath = import.meta.env.SOCKET_PATH || '/socket.io';
     const socket = io(socketUrl, {
