@@ -12,6 +12,7 @@ interface CartDrawerProps {
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
   const { cart, itemCount, subtotal } = useCart();
+  const cartItems = cart?.items ?? [];
   const FREE_SHIPPING_THRESHOLD = 25000;
   const progressPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
@@ -74,7 +75,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
 
         {/* Items List */}
         <div className="flex-1 overflow-y-auto px-5 py-2">
-          {!cart || cart.items.length === 0 ? (
+          {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center py-10">
               <div className="w-20 h-20 bg-[#f0f9f6] border border-[#008060]/20 rounded-3xl flex items-center justify-center">
                 <ShoppingCart className="w-10 h-10 text-[#008060]" />
@@ -95,7 +96,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
             </div>
           ) : (
             <div>
-              {cart.items.map((item) => (
+              {cartItems.map((item) => (
                 <CartItemRow key={item.id} item={item} />
               ))}
             </div>
@@ -103,7 +104,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        {cart && cart.items.length > 0 && (
+        {cartItems.length > 0 && (
           <div className="px-5 py-4 border-t border-[#e1e3e5] bg-white space-y-3">
             <div className="flex justify-between items-baseline font-bold text-[#1a1a1a]">
               <span className="text-sm">Sous-total</span>

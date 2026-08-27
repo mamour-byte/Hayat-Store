@@ -9,11 +9,12 @@ import { formatPrice } from '../../../lib/utils/currency';
 
 export const CartPage: React.FC = () => {
   const { cart, subtotal, itemCount, clearCart } = useCart();
+  const cartItems = cart?.items ?? [];
   const FREE_SHIPPING_THRESHOLD = 25000;
   const progressPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
-  if (!cart || cart.items.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center space-y-6">
         <div className="w-24 h-24 bg-[#f0f9f6] text-[#008060] rounded-3xl flex items-center justify-center mx-auto shadow-sm border border-[#008060]/20">
@@ -91,7 +92,7 @@ export const CartPage: React.FC = () => {
           <h2 className="text-sm font-bold text-[#1a1a1a] uppercase tracking-wider mb-2 text-[#6d7175]">
             Détails des articles
           </h2>
-          {cart.items.map((item) => (
+          {cartItems.map((item) => (
             <CartItemRow key={item.id} item={item} />
           ))}
         </div>
