@@ -1,6 +1,7 @@
 import type {
   ShippingMethod,
-    ShippingZone,
+  ShippingZone,
+  DeliveryNeighborhood,
   ValidateCouponPayload,
   ValidateCouponResponse,
   CreateOrderPayload,
@@ -19,6 +20,11 @@ export const checkoutService = {
 
   getShippingZones: async (): Promise<ShippingZone[]> => {
     const { data } = await apiClient.get<ShippingZone[] | { data: ShippingZone[] }>(API_ENDPOINTS.SHIPPING.ZONES);
+    return Array.isArray(data) ? data : data.data || [];
+  },
+
+  getNeighborhoods: async (): Promise<DeliveryNeighborhood[]> => {
+    const { data } = await apiClient.get<DeliveryNeighborhood[] | { data: DeliveryNeighborhood[] }>(API_ENDPOINTS.SHIPPING.NEIGHBORHOODS);
     return Array.isArray(data) ? data : data.data || [];
   },
 

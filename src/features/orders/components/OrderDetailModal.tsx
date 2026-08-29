@@ -82,14 +82,18 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, isOpe
         </div>
 
         {/* Shipping */}
-        {(order.shippingAddress || order.shippingCity) && (
+        {(order.shippingAddress || order.shippingCity || order.deliveryNeighborhood) && (
           <div className="space-y-1">
             <h3 className="text-sm font-semibold text-[#1a1a1a]">Livraison</h3>
             <p className="text-sm text-[#6d7175]">
               {[order.shippingFirstName, order.shippingLastName].filter(Boolean).join(' ')}
             </p>
             <p className="text-sm text-[#6d7175]">
-              {[order.shippingAddress, order.shippingCity].filter(Boolean).join(', ')}
+              {[
+                order.shippingAddress,
+                order.deliveryNeighborhood?.name || order.shippingCity,
+                order.deliveryNeighborhood?.deliveryZone?.name ? `(${order.deliveryNeighborhood.deliveryZone.name})` : null,
+              ].filter(Boolean).join(', ')}
             </p>
           </div>
         )}

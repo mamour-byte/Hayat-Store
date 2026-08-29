@@ -11,7 +11,13 @@ import { Input } from '../../../components/ui/Input';
 
 const schema = z
   .object({
-    password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+    password: z
+      .string()
+      .min(6, 'Le mot de passe doit contenir au moins 6 caractères')
+      .regex(
+        /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/,
+        'Le mot de passe doit contenir une majuscule, une lettre et un chiffre',
+      ),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {

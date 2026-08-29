@@ -48,7 +48,7 @@ export const LoginForm: React.FC = () => {
             <Input
               label="Adresse email"
               type="email"
-              placeholder="votre.email@exemple.com"
+              placeholder="exemple@mail.com"
               leftIcon={<Mail className="w-4 h-4 text-[#6d7175]" />}
               error={errors.email?.message}
               {...register('email')}

@@ -14,7 +14,13 @@ const schema = z
     lastName: z.string().min(2, 'Nom requis'),
     email: z.email('Adresse email invalide'),
     phone: z.string().optional(),
-    password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+    password: z
+      .string()
+      .min(6, 'Le mot de passe doit contenir au moins 6 caractères')
+      .regex(
+        /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/,
+        'Le mot de passe doit contenir une majuscule, une lettre et un chiffre',
+      ),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -34,7 +40,8 @@ export const RegisterForm: React.FC = () => {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  const onSubmit = async ({ confirmPassword: _cp, ...data }: FormValues) => {
+  const onSubmit = async ({ firstName, lastName, email, phone, password }: FormValues) => {
+    const data = { firstName, lastName, email, phone, password };
     await registerUser(data);
     navigate('/');
   };
@@ -55,14 +62,14 @@ export const RegisterForm: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               <Input
                 label="Prénom"
-                placeholder="Mamour"
+                placeholder="votre prénom"
                 leftIcon={<User className="w-4 h-4 text-[#6d7175]" />}
                 error={errors.firstName?.message}
                 {...register('firstName')}
               />
               <Input
                 label="Nom"
-                placeholder="Diallo"
+                placeholder="votre nom"
                 leftIcon={<User className="w-4 h-4 text-[#6d7175]" />}
                 error={errors.lastName?.message}
                 {...register('lastName')}
@@ -79,7 +86,7 @@ export const RegisterForm: React.FC = () => {
             <Input
               label="Téléphone (optionnel)"
               type="tel"
-              placeholder="+221 77 000 00 00"
+              placeholder="77 000 00 00"
               leftIcon={<Phone className="w-4 h-4 text-[#6d7175]" />}
               error={errors.phone?.message}
               {...register('phone')}

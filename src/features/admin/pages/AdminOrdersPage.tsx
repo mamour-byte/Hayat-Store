@@ -187,97 +187,122 @@ export const AdminOrdersPage: React.FC = () => {
                 <tr>
                   <th className="py-3.5 px-4">Commande</th>
                   <th className="py-3.5 px-4">Client</th>
-                  <th className="py-3.5 px-4">Téléphone & Adresse</th>
-                  <th className="py-3.5 px-4">Montant Total</th>
+                  <th className="py-3.5 px-4">Adresse & Quartier</th>
+                  <th className="py-3.5 px-4">Montant & Frais</th>
                   <th className="py-3.5 px-4">Paiement</th>
                   <th className="py-3.5 px-4">Statut Commande</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e1e3e5]">
-                {filteredOrders.map((ord) => (
-                  <tr key={ord.id} className="hover:bg-[#f6f6f7]/50 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-[#008060] whitespace-nowrap">
-                      {ord.orderNumber}
-                      <p className="text-[10px] text-[#6d7175] font-normal flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {new Date(ord.createdAt).toLocaleDateString('fr-FR')}
-                      </p>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <p className="font-bold text-[#1a1a1a]">
-                        {ord.shippingFirstName} {ord.shippingLastName}
-                      </p>
-                      <p className="text-[11px] text-[#6d7175]">{ord.customerEmail || 'Sans email'}</p>
-                    </td>
-                    <td className="py-3.5 px-4 text-[#6d7175]">
-                      <p className="font-semibold text-[#1a1a1a]">{ord.customerPhone}</p>
-                      <p className="text-[11px] truncate max-w-xs">{ord.shippingAddress}, {ord.shippingCity}</p>
-                    </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span className="font-black text-[#008060] text-sm">{formatPrice(ord.total)}</span>
-                      {ord.couponCode && (
-                        <p className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded w-max mt-0.5 font-bold">
-                          Code: {ord.couponCode}
+                {filteredOrders.map((ord) => {
+                  const neighborhoodName = ord.deliveryNeighborhood?.name || ord.shippingCity;
+                  const zoneName = ord.deliveryNeighborhood?.deliveryZone?.name || ord.shippingZone?.name;
+                  const shippingFee = Number(ord.shippingAmount) || 0;
+
+                  return (
+                    <tr key={ord.id} className="hover:bg-[#f6f6f7]/50 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-[#008060] whitespace-nowrap">
+                        {ord.orderNumber}
+                        <p className="text-[10px] text-[#6d7175] font-normal flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(ord.createdAt).toLocaleDateString('fr-FR')}
                         </p>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap space-y-1">
-                      <div>{getPaymentStatusBadge(ord.paymentStatus || PaymentStatus.PENDING)}</div>
-                      {(() => {
-                        const provider = ord.payments?.[0]?.provider;
-                        const isElectronic = provider && provider !== PaymentProvider.CASH_ON_DELIVERY;
-                        if (isElectronic) {
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <p className="font-bold text-[#1a1a1a]">
+                          {ord.shippingFirstName} {ord.shippingLastName}
+                        </p>
+                        <p className="text-[11px] text-[#6d7175]">{ord.customerEmail || 'Sans email'}</p>
+                      </td>
+                      <td className="py-3.5 px-4 text-[#6d7175]">
+                        <p className="font-semibold text-[#1a1a1a]">{ord.customerPhone}</p>
+                        <p className="text-[11px] truncate max-w-xs">{ord.shippingAddress}</p>
+                        {neighborhoodName && (
+                          <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                            <span className="text-[10px] font-semibold bg-[#f0f9f6] text-[#008060] border border-[#008060]/20 px-1.5 py-0.2 rounded">
+                               {neighborhoodName}
+                            </span>
+                            {zoneName && (
+                              <span className="text-[10px] bg-slate-100 text-[#6d7175] px-1.5 py-0.2 rounded font-medium">
+                                {zoneName}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="flex items-baseline gap-1">
+                          <span className="font-black text-[#008060] text-sm">{formatPrice(ord.total)}</span>
+                        </div>
+                        <div className="text-[10px] text-[#6d7175] space-x-1 mt-0.5">
+                          <span>Panier : {formatPrice(ord.subtotal)}</span>
+                          <span>•</span>
+                          <span className="font-semibold text-[#1a1a1a]">Livraison : {formatPrice(shippingFee)}</span>
+                        </div>
+                        {ord.couponCode && (
+                          <p className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded w-max mt-0.5 font-bold">
+                            Code: {ord.couponCode}
+                          </p>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap space-y-1">
+                        <div>{getPaymentStatusBadge(ord.paymentStatus || PaymentStatus.PENDING)}</div>
+                        {(() => {
+                          const provider = ord.payments?.[0]?.provider;
+                          const isElectronic = provider && provider !== PaymentProvider.CASH_ON_DELIVERY;
+                          if (isElectronic) {
+                            return (
+                              <p className="text-[10px] text-slate-500 italic">
+                                Auto ({provider})
+                              </p>
+                            );
+                          }
                           return (
-                            <p className="text-[10px] text-slate-500 italic">
-                              Auto ({provider})
-                            </p>
+                            <select
+                              value={ord.paymentStatus || PaymentStatus.PENDING}
+                              disabled={updatingStatus === ord.id}
+                              onChange={(e) => handlePaymentStatusChange(ord.id, e.target.value as PaymentStatus)}
+                              className="text-[11px] bg-[#f6f6f7] border border-[#e1e3e5] rounded px-1.5 py-0.5 text-[#1a1a1a] focus:outline-none focus:border-[#008060] cursor-pointer"
+                            >
+                              <option value={PaymentStatus.PENDING}>En attente</option>
+                              <option value={PaymentStatus.PAID}>Payé</option>
+                              <option value={PaymentStatus.REFUNDED}>Remboursé</option>
+                              <option value={PaymentStatus.FAILED}>Échoué</option>
+                            </select>
                           );
-                        }
-                        return (
-                          <select
-                            value={ord.paymentStatus || PaymentStatus.PENDING}
-                            disabled={updatingStatus === ord.id}
-                            onChange={(e) => handlePaymentStatusChange(ord.id, e.target.value as PaymentStatus)}
-                            className="text-[11px] bg-[#f6f6f7] border border-[#e1e3e5] rounded px-1.5 py-0.5 text-[#1a1a1a] focus:outline-none focus:border-[#008060] cursor-pointer"
-                          >
-                            <option value={PaymentStatus.PENDING}>En attente</option>
-                            <option value={PaymentStatus.PAID}>Payé</option>
-                            <option value={PaymentStatus.REFUNDED}>Remboursé</option>
-                            <option value={PaymentStatus.FAILED}>Échoué</option>
-                          </select>
-                        );
-                      })()}
-                    </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap space-y-1">
-                      <div>{getStatusBadge(ord.status)}</div>
-                      <select
-                        value={ord.status}
-                        disabled={updatingStatus === ord.id}
-                        onChange={(e) => handleStatusChange(ord.id, e.target.value as OrderStatus)}
-                        className="text-[11px] bg-[#f6f6f7] border border-[#e1e3e5] rounded-lg px-2 py-0.5 font-semibold text-[#1a1a1a] focus:outline-none focus:border-[#008060] cursor-pointer"
-                      >
-                        <option value={OrderStatus.PENDING}>En attente</option>
-                        <option value={OrderStatus.CONFIRMED}>Confirmée</option>
-                        <option value={OrderStatus.IN_DELIVERY}>En livraison</option>
-                        <option value={OrderStatus.DELIVERED}>Livrée</option>
-                        <option value={OrderStatus.CANCELLED}>Annulée</option>
-                        <option value={OrderStatus.REFUNDED}>Remboursée</option>
-                      </select>
-                    </td>
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <button
-                        onClick={() => {
-                          setSelectedOrder(ord);
-                          setIsModalOpen(true);
-                        }}
-                        className="p-1.5 text-[#008060] hover:bg-[#f0f9f6] rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 font-semibold text-xs border border-[#008060]/20"
-                      >
-                        <Eye className="w-3.5 h-3.5" /> Voir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        })()}
+                      </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap space-y-1">
+                        <div>{getStatusBadge(ord.status)}</div>
+                        <select
+                          value={ord.status}
+                          disabled={updatingStatus === ord.id}
+                          onChange={(e) => handleStatusChange(ord.id, e.target.value as OrderStatus)}
+                          className="text-[11px] bg-[#f6f6f7] border border-[#e1e3e5] rounded-lg px-2 py-0.5 font-semibold text-[#1a1a1a] focus:outline-none focus:border-[#008060] cursor-pointer"
+                        >
+                          <option value={OrderStatus.PENDING}>En attente</option>
+                          <option value={OrderStatus.CONFIRMED}>Confirmée</option>
+                          <option value={OrderStatus.IN_DELIVERY}>En livraison</option>
+                          <option value={OrderStatus.DELIVERED}>Livrée</option>
+                          <option value={OrderStatus.CANCELLED}>Annulée</option>
+                          <option value={OrderStatus.REFUNDED}>Remboursée</option>
+                        </select>
+                      </td>
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => {
+                            setSelectedOrder(ord);
+                            setIsModalOpen(true);
+                          }}
+                          className="p-1.5 text-[#008060] hover:bg-[#f0f9f6] rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 font-semibold text-xs border border-[#008060]/20"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Voir
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -315,9 +340,13 @@ export const AdminOrdersPage: React.FC = () => {
                   <p className="text-[#6d7175]">Email : {selectedOrder.customerEmail || 'Non spécifié'}</p>
                 </div>
                 <div>
-                  <h4 className="font-bold text-[#1a1a1a] mb-1 uppercase tracking-wider text-[10px] text-[#6d7175]">Livraison & Statuts</h4>
-                  <p className="font-semibold text-[#1a1a1a]">{selectedOrder.shippingAddress}</p>
-                  <p className="text-[#6d7175]">{selectedOrder.shippingCity}, Sénégal</p>
+                  <h4 className="font-bold text-[#1a1a1a] mb-1 uppercase tracking-wider text-[10px] text-[#6d7175]">Livraison & Destination</h4>
+                  <p className="font-semibold text-[#1a1a1a]">{selectedOrder.shippingAddress || 'Retrait en magasin'}</p>
+                  <p className="text-[#6d7175]">
+                    {selectedOrder.deliveryNeighborhood?.name || selectedOrder.shippingCity || 'Dakar'}
+                    {selectedOrder.deliveryNeighborhood?.deliveryZone?.name ? ` (${selectedOrder.deliveryNeighborhood.deliveryZone.name})` : ''}
+                    {', Sénégal'}
+                  </p>
                   <div className="mt-2 flex items-center gap-2">
                     {getStatusBadge(selectedOrder.status)}
                     {getPaymentStatusBadge(selectedOrder.paymentStatus || PaymentStatus.PENDING)}
@@ -343,23 +372,27 @@ export const AdminOrdersPage: React.FC = () => {
 
               {/* Financial Breakdown */}
               <div className="p-4 bg-[#f0f9f6] rounded-xl border border-[#008060]/20 space-y-2">
+                <h4 className="font-bold text-[#1a1a1a] uppercase tracking-wider text-[10px] text-[#008060] mb-1">Détails de la Vente</h4>
                 <div className="flex justify-between text-[#6d7175]">
-                  <span>Sous-total</span>
+                  <span>Sous-total (Articles)</span>
                   <span className="font-semibold text-[#1a1a1a]">{formatPrice(selectedOrder.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-[#6d7175]">
-                  <span>Frais de livraison</span>
-                  <span className="font-semibold text-[#1a1a1a]">{formatPrice(selectedOrder.shippingAmount)}</span>
+                  <span>
+                    Frais de livraison
+                    {selectedOrder.deliveryNeighborhood?.name ? ` (${selectedOrder.deliveryNeighborhood.name})` : ''}
+                  </span>
+                  <span className="font-bold text-[#008060]">{formatPrice(selectedOrder.shippingAmount)}</span>
                 </div>
                 {Number(selectedOrder.discountAmount) > 0 && (
                   <div className="flex justify-between text-[#008060]">
-                    <span>Remise Coupon</span>
+                    <span>Remise Coupon ({selectedOrder.couponCode || 'Promo'})</span>
                     <span className="font-bold">-{formatPrice(selectedOrder.discountAmount)}</span>
                   </div>
                 )}
                 <div className="pt-2 border-t border-[#008060]/20 flex justify-between font-black text-base text-[#1a1a1a]">
-                  <span>Total Réglé</span>
-                  <span className="text-[#008060]">{formatPrice(selectedOrder.total)}</span>
+                  <span>Total Global de la Vente</span>
+                  <span className="text-[#008060] text-lg">{formatPrice(selectedOrder.total)}</span>
                 </div>
               </div>
             </div>

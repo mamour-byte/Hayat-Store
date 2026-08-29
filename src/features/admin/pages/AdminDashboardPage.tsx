@@ -451,34 +451,49 @@ export const AdminDashboardPage: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    stats.recentOrders.slice(0, 5).map((ord) => (
-                      <tr key={ord.id} className="hover:bg-[#f6f6f7]/60 transition-colors">
-                        <td className="py-3.5 px-4 font-bold text-[#008060]">{ord.orderNumber}</td>
-                        <td className="py-3.5 px-4 font-semibold">
-                          {ord.shippingFirstName} {ord.shippingLastName}
-                          <p className="text-[11px] text-[#6d7175] font-normal">{ord.customerPhone}</p>
-                        </td>
-                        <td className="py-3.5 px-4 text-[#6d7175]">
-                          {ord.shippingAddress}, {ord.shippingCity}
-                        </td>
-                        <td className="py-3.5 px-4 font-bold">{formatPrice(ord.total)}</td>
-                        <td className="py-3.5 px-4">{getStatusBadge(ord.status)}</td>
-                        <td className="py-3.5 px-4 text-[#6d7175]">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-[#6d7175]" />
-                            {new Date(ord.createdAt).toLocaleDateString('fr-FR')}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <Link
-                            to="/admin/orders"
-                            className="inline-flex items-center gap-1 text-xs font-semibold bg-[#f0f9f6] text-[#008060] border border-[#008060]/20 px-3 py-1 rounded-lg hover:bg-[#008060] hover:text-white transition-colors"
-                          >
-                            Détails
-                          </Link>
-                        </td>
-                      </tr>
-                    ))
+                    stats.recentOrders.slice(0, 5).map((ord) => {
+                      const neighborhoodName = ord.deliveryNeighborhood?.name || ord.shippingCity;
+                      const shippingFee = Number(ord.shippingAmount) || 0;
+
+                      return (
+                        <tr key={ord.id} className="hover:bg-[#f6f6f7]/60 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-[#008060]">{ord.orderNumber}</td>
+                          <td className="py-3.5 px-4 font-semibold">
+                            {ord.shippingFirstName} {ord.shippingLastName}
+                            <p className="text-[11px] text-[#6d7175] font-normal">{ord.customerPhone}</p>
+                          </td>
+                          <td className="py-3.5 px-4 text-[#6d7175]">
+                            <p className="truncate max-w-xs">{ord.shippingAddress}</p>
+                            {neighborhoodName && (
+                              <span className="inline-block text-[10px] font-semibold bg-[#f0f9f6] text-[#008060] px-1.5 py-0.2 rounded mt-0.5 border border-[#008060]/20">
+                                 {neighborhoodName}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-bold text-[#1a1a1a]">{formatPrice(ord.total)}</span>
+                            <p className="text-[10px] text-[#6d7175]">
+                              Livr : <span className="font-semibold text-[#008060]">{formatPrice(shippingFee)}</span>
+                            </p>
+                          </td>
+                          <td className="py-3.5 px-4">{getStatusBadge(ord.status)}</td>
+                          <td className="py-3.5 px-4 text-[#6d7175]">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-[#6d7175]" />
+                              {new Date(ord.createdAt).toLocaleDateString('fr-FR')}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <Link
+                              to="/admin/orders"
+                              className="inline-flex items-center gap-1 text-xs font-semibold bg-[#f0f9f6] text-[#008060] border border-[#008060]/20 px-3 py-1 rounded-lg hover:bg-[#008060] hover:text-white transition-colors"
+                            >
+                              Détails
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>

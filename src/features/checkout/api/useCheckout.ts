@@ -18,6 +18,14 @@ export const useShippingZones = () => {
   });
 };
 
+export const useNeighborhoods = () => {
+  return useQuery({
+    queryKey: ['shipping-neighborhoods'],
+    queryFn: checkoutService.getNeighborhoods,
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
 export const useValidateCoupon = () => {
   return useMutation({
     mutationFn: (payload: ValidateCouponPayload) => checkoutService.validateCoupon(payload),

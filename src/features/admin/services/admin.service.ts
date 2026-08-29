@@ -13,6 +13,8 @@ import type {
   StatsQueryParams,
   ShippingZone,
   ShippingZonePayload,
+  DeliveryNeighborhood,
+  DeliveryNeighborhoodPayload,
 } from '../../../types';
 import { OrderStatus, PaymentStatus, ProductStatus, UserRole, UserStatus, CouponType, ReviewStatus } from '../../../types/enums';
 
@@ -1016,7 +1018,7 @@ export const adminService = {
     }
   },
 
-  // --- 8. ZONES DE LIVRAISON CRUD ---
+  // --- 8. ZONES DE LIVRAISON & QUARTIERS CRUD ---
 
   getShippingZones: async (): Promise<ShippingZone[]> => {
     const { data } = await apiClient.get<ShippingZone[] | { data: ShippingZone[] }>(API_ENDPOINTS.SHIPPING.ZONES);
@@ -1035,5 +1037,34 @@ export const adminService = {
 
   deleteShippingZone: async (zoneId: string): Promise<void> => {
     await apiClient.delete(API_ENDPOINTS.SHIPPING.ZONE(zoneId));
+  },
+
+  getNeighborhoodsAdmin: async (): Promise<DeliveryNeighborhood[]> => {
+    try {
+      const { data } = await apiClient.get<DeliveryNeighborhood[] | { data: DeliveryNeighborhood[] }>(
+        API_ENDPOINTS.SHIPPING.NEIGHBORHOODS_ADMIN
+      );
+      return Array.isArray(data) ? data : data.data || [];
+    } catch {
+      // Fallback to public endpoint if admin endpoint not available
+      const { data } = await apiClient.get<DeliveryNeighborhood[] | { data: DeliveryNeighborhood[] }>(
+        API_ENDPOINTS.SHIPPING.NEIGHBORHOODS
+      );
+      return Array.isArray(data) ? data : data.data || [];
+    }
+  },
+
+  createNeighborhood: async (payload: DeliveryNeighborhoodPayload): Promise<DeliveryNeighborhood> => {
+    const { data } = await apiClient.post<DeliveryNeighborhood>(API_ENDPOINTS.SHIPPING.NEIGHBORHOODS, payload);
+    return data;
+  },
+
+  updateNeighborhood: async (id: string, payload: Partial<DeliveryNeighborhoodPayload>): Promise<DeliveryNeighborhood> => {
+    const { data } = await apiClient.patch<DeliveryNeighborhood>(API_ENDPOINTS.SHIPPING.NEIGHBORHOOD(id), payload);
+    return data;
+  },
+
+  deleteNeighborhood: async (id: string): Promise<void> => {
+    await apiClient.delete(API_ENDPOINTS.SHIPPING.NEIGHBORHOOD(id));
   },
 };

@@ -1,6 +1,6 @@
 import { OrderStatus, PaymentStatus } from './enums';
 import type { Payment } from './payment';
-import type { DeliveryMethod, Shipment } from './shipping';
+import type { DeliveryMethod, DeliveryNeighborhood, Shipment, ShippingZone } from './shipping';
 
 export interface OrderItem {
   id: string;
@@ -38,6 +38,9 @@ export interface Order {
   shippingCountry?: string;
   deliveryMethod?: DeliveryMethod;
   shippingZoneId?: string | null;
+  deliveryNeighborhoodId?: string | null;
+  deliveryNeighborhood?: DeliveryNeighborhood | null;
+  shippingZone?: ShippingZone | null;
   couponCode?: string | null;
   notes?: string | null;
   items: OrderItem[];
@@ -57,8 +60,11 @@ export interface CreateOrderCartPayload {
   shippingCity?: string;
   shippingMethodId?: string;
   couponCode?: string;
+  fulfillmentType?: DeliveryMethod;
   deliveryMethod?: DeliveryMethod;
   shippingZoneId?: string;
+  deliveryZoneId?: string;
+  deliveryNeighborhoodId?: string;
 }
 
 export interface CreateOrderDirectPayload {
@@ -74,8 +80,11 @@ export interface CreateOrderDirectPayload {
   shippingAddress?: string;
   shippingCity?: string;
   shippingMethodId?: string;
+  fulfillmentType?: DeliveryMethod;
   deliveryMethod?: DeliveryMethod;
   shippingZoneId?: string;
+  deliveryZoneId?: string;
+  deliveryNeighborhoodId?: string;
   couponCode?: string;
 }
 

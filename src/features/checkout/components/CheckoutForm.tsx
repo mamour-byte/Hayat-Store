@@ -5,9 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Truck, User, MapPin, CreditCard, ShoppingBag, Store } from 'lucide-react';
-import { useCreateOrder, useInitiatePayment, useShippingZones } from '../api/useCheckout';
+import { useCreateOrder, useInitiatePayment, useNeighborhoods } from '../api/useCheckout';
 import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { CouponInput } from './CouponInput';
+import { NeighborhoodCombobox } from './NeighborhoodCombobox';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { formatPrice } from '../../../lib/utils/currency';
@@ -15,15 +16,14 @@ import { useCart } from '../../../app/providers/CartProvider';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import type { ValidateCouponResponse } from '../../../types';
 import { PaymentProvider } from '../../../types/enums';
-import type { DeliveryMethod } from '../../../types';
+import type { DeliveryMethod, DeliveryNeighborhood } from '../../../types';
 
 const schema = z.object({
-  customerEmail: z.email('Email invalide'),
+  customerEmail: z.string().email('Email invalide'),
   customerPhone: z.string().min(8, 'Téléphone requis'),
   shippingFirstName: z.string().min(2, 'Prénom requis'),
   shippingLastName: z.string().min(2, 'Nom requis'),
   shippingAddress: z.string().optional(),
-  shippingCity: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -32,21 +32,28 @@ export const CheckoutForm: React.FC = () => {
   const navigate = useNavigate();
   const { cart, subtotal, clearCart } = useCart();
   const { user } = useAuth();
-  const { data: shippingZones, isLoading: isLoadingZones } = useShippingZones();
+  const { data: neighborhoods, isLoading: isLoadingNeighborhoods } = useNeighborhoods();
   const { mutateAsync: createOrder, isPending: isCreating } = useCreateOrder();
   const { mutateAsync: initiatePayment, isPending: isPaying } = useInitiatePayment();
 
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('DELIVERY');
-  const [selectedShippingZoneId, setSelectedShippingZoneId] = useState<string>();
+  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>();
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState<DeliveryNeighborhood | undefined>();
   const [selectedProvider, setSelectedProvider] = useState<PaymentProvider>(PaymentProvider.CASH_ON_DELIVERY);
   const [couponResult, setCouponResult] = useState<ValidateCouponResponse | null>(null);
+  const [neighborhoodError, setNeighborhoodError] = useState<string | null>(null);
 
-  const selectedShippingZone = shippingZones?.find((zone) => zone.id === selectedShippingZoneId);
-  const shippingCost = deliveryMethod === 'DELIVERY' && selectedShippingZone
-    ? parseFloat(String(selectedShippingZone.price))
+  // Determine active zone and shipping cost
+  const activeZone = selectedNeighborhood?.deliveryZone ?? (
+    selectedNeighborhoodId ? neighborhoods?.find((n) => n.id === selectedNeighborhoodId)?.deliveryZone : undefined
+  );
+  
+  const shippingCost = deliveryMethod === 'DELIVERY' && activeZone
+    ? parseFloat(String(activeZone.price))
     : 0;
+
   const discount = couponResult?.discountAmount ?? 0;
-  const total = subtotal + shippingCost - discount;
+  const total = Math.max(0, subtotal + shippingCost - discount);
 
   const {
     register,
@@ -62,34 +69,66 @@ export const CheckoutForm: React.FC = () => {
     },
   });
 
+  const handleNeighborhoodSelect = (neighborhood: DeliveryNeighborhood | undefined) => {
+    setSelectedNeighborhood(neighborhood);
+    setSelectedNeighborhoodId(neighborhood?.id);
+    setNeighborhoodError(null);
+  };
+
   const onSubmit = async (formData: FormValues) => {
-    if (!cart) { toast.error('Panier vide'); return; }
-    if (deliveryMethod === 'DELIVERY' && (!selectedShippingZoneId || !formData.shippingAddress || !formData.shippingCity)) {
-      toast.error('Sélectionnez une zone et renseignez votre adresse de livraison');
+    if (!cart) {
+      toast.error('Panier vide');
       return;
     }
 
-    const order = await createOrder({
-      cartId: cart.id,
-      ...formData,
-      deliveryMethod,
-      shippingZoneId: deliveryMethod === 'DELIVERY' ? selectedShippingZoneId : undefined,
-      couponCode: couponResult?.coupon?.code,
-    });
+    const isDelivery = deliveryMethod === 'DELIVERY';
 
-    const payment = await initiatePayment({ orderId: order.id, provider: selectedProvider });
-
-    // Vider le panier après validation réussie de la commande
-    try {
-      await clearCart();
-    } catch {
-      // Silently ignore cart clearing errors
+    if (isDelivery) {
+      if (!selectedNeighborhoodId) {
+        setNeighborhoodError('Veuillez sélectionner un quartier de livraison');
+        toast.error('Veuillez choisir un quartier de livraison');
+        return;
+      }
+      if (!formData.shippingAddress || formData.shippingAddress.trim() === '') {
+        toast.error('Veuillez renseigner votre adresse de livraison exacte');
+        return;
+      }
     }
 
-    if (payment.paymentUrl) {
-      window.location.href = payment.paymentUrl;
-    } else {
-      navigate(`/checkout/success?orderNumber=${encodeURIComponent(order.orderNumber)}`);
+    try {
+      const order = await createOrder({
+        cartId: cart.id,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone,
+        shippingFirstName: formData.shippingFirstName,
+        shippingLastName: formData.shippingLastName,
+        fulfillmentType: deliveryMethod,
+        deliveryMethod,
+        shippingAddress: isDelivery ? formData.shippingAddress : undefined,
+        shippingCity: isDelivery ? (selectedNeighborhood?.name || 'Dakar') : undefined,
+        deliveryNeighborhoodId: isDelivery ? selectedNeighborhoodId : undefined,
+        deliveryZoneId: isDelivery ? (selectedNeighborhood?.deliveryZoneId || activeZone?.id) : undefined,
+        shippingZoneId: isDelivery ? (selectedNeighborhood?.deliveryZoneId || activeZone?.id) : undefined,
+        couponCode: couponResult?.coupon?.code,
+      });
+
+      const payment = await initiatePayment({ orderId: order.id, provider: selectedProvider });
+
+      // Vider le panier après validation réussie de la commande
+      try {
+        await clearCart();
+      } catch {
+        // Silently ignore cart clearing errors
+      }
+
+      if (payment.paymentUrl) {
+        window.location.href = payment.paymentUrl;
+      } else {
+        navigate(`/checkout/success?orderNumber=${encodeURIComponent(order.orderNumber)}`);
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Erreur lors de la création de la commande';
+      toast.error(msg);
     }
   };
 
@@ -126,8 +165,16 @@ export const CheckoutForm: React.FC = () => {
                     { value: 'DELIVERY' as const, label: 'Livraison à domicile', icon: Truck },
                     { value: 'PICKUP' as const, label: 'Retrait en magasin', icon: Store },
                   ]).map(({ value, label, icon: Icon }) => (
-                    <label key={value} className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer ${deliveryMethod === value ? 'border-[#008060] bg-[#f0f9f6]' : 'border-[#e1e3e5]'}`}>
-                      <input type="radio" name="deliveryMethod" checked={deliveryMethod === value} onChange={() => setDeliveryMethod(value)} />
+                    <label key={value} className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${deliveryMethod === value ? 'border-[#008060] bg-[#f0f9f6]' : 'border-[#e1e3e5] hover:bg-slate-50'}`}>
+                      <input
+                        type="radio"
+                        name="deliveryMethod"
+                        checked={deliveryMethod === value}
+                        onChange={() => {
+                          setDeliveryMethod(value);
+                          setNeighborhoodError(null);
+                        }}
+                      />
                       <Icon className="w-5 h-5 text-[#008060]" />
                       <span className="text-sm font-medium">{label}</span>
                     </label>
@@ -137,13 +184,27 @@ export const CheckoutForm: React.FC = () => {
 
               {deliveryMethod === 'DELIVERY' && (
                 <div className="bg-white border border-[#e1e3e5] rounded-2xl p-6 space-y-4 shadow-sm">
-                  <h2 className="font-bold text-[#1a1a1a] flex items-center gap-2"><MapPin className="w-4 h-4 text-[#008060]" /> Zone de livraison</h2>
-                  <select value={selectedShippingZoneId ?? ''} onChange={(event) => setSelectedShippingZoneId(event.target.value || undefined)} className="w-full rounded-lg border border-[#e1e3e5] bg-white px-3 py-2.5 text-sm">
-                    <option value="">{isLoadingZones ? 'Chargement des zones...' : 'Choisir une zone'}</option>
-                    {shippingZones?.filter((zone) => zone.isActive !== false).map((zone) => <option key={zone.id} value={zone.id}>{zone.name} · {formatPrice(zone.price)}</option>)}
-                  </select>
-                  <Input label="Adresse" placeholder="Rue, Quartier, Villa..." error={errors.shippingAddress?.message} {...register('shippingAddress')} />
-                  <Input label="Ville" placeholder="Dakar" error={errors.shippingCity?.message} {...register('shippingCity')} />
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-bold text-[#1a1a1a] flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-[#008060]" /> Destination & Adresse de livraison
+                    </h2>
+                  </div>
+
+                  {/* Searchable Neighborhood Combobox */}
+                  <NeighborhoodCombobox
+                    neighborhoods={neighborhoods || []}
+                    selectedNeighborhoodId={selectedNeighborhoodId}
+                    onSelect={handleNeighborhoodSelect}
+                    isLoading={isLoadingNeighborhoods}
+                    error={neighborhoodError || undefined}
+                  />
+
+                  <Input
+                    label="Adresse précise"
+                    placeholder="Rue, numéro de villa, immeuble, étage, repère..."
+                    error={errors.shippingAddress?.message}
+                    {...register('shippingAddress')}
+                  />
                 </div>
               )}
 
@@ -179,7 +240,20 @@ export const CheckoutForm: React.FC = () => {
                     <span>Sous-total</span><span>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-[#1a1a1a]">
-                    <span>Livraison</span><span>{formatPrice(shippingCost)}</span>
+                    <div className="flex flex-col">
+                      <span>Livraison</span>
+                      {deliveryMethod === 'DELIVERY' && selectedNeighborhood && (
+                        <span className="text-[11px] text-[#6d7175]">
+                          {selectedNeighborhood.name} {activeZone ? `(${activeZone.name})` : ''}
+                        </span>
+                      )}
+                      {deliveryMethod === 'PICKUP' && (
+                        <span className="text-[11px] text-[#6d7175]">Retrait en magasin</span>
+                      )}
+                    </div>
+                    <span className="font-semibold text-[#008060]">
+                      {shippingCost === 0 ? 'Gratuit' : formatPrice(shippingCost)}
+                    </span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-emerald-600">
@@ -189,7 +263,7 @@ export const CheckoutForm: React.FC = () => {
                 </div>
 
                 <div className="flex justify-between font-bold text-[#1a1a1a] pt-3 border-t border-[#e1e3e5]">
-                  <span>Total</span><span>{formatPrice(total)}</span>
+                  <span>Total</span><span className="text-lg text-[#008060]">{formatPrice(total)}</span>
                 </div>
 
                 {/* Coupon */}
@@ -206,3 +280,4 @@ export const CheckoutForm: React.FC = () => {
     </div>
   );
 };
+

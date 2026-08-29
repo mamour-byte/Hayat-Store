@@ -11,12 +11,37 @@ export interface ShippingMethod {
 }
 export type DeliveryMethod = 'DELIVERY' | 'PICKUP';
 
+export interface DeliveryNeighborhood {
+  id: string;
+  name: string;
+  deliveryZoneId: string;
+  isActive?: boolean;
+  deliveryZone?: {
+    id: string;
+    name: string;
+    price: string | number;
+    description?: string | null;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DeliveryNeighborhoodPayload {
+  name: string;
+  deliveryZoneId: string;
+  isActive?: boolean;
+}
+
 export interface ShippingZone {
   id: string;
   name: string;
   price: string | number;
   description?: string | null;
   isActive?: boolean;
+  neighborhoods?: DeliveryNeighborhood[];
+  _count?: {
+    neighborhoods?: number;
+  };
 }
 
 export interface ShippingZonePayload {
@@ -24,6 +49,7 @@ export interface ShippingZonePayload {
   price: number;
   description?: string;
   isActive: boolean;
+  neighborhoods?: string[];
 }
 
 export interface Shipment {
