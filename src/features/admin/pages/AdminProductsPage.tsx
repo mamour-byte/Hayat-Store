@@ -25,6 +25,7 @@ import { ProductStatus } from '../../../types/enums';
 import { formatPrice } from '../../../lib/utils/currency';
 import { Button } from '../../../components/ui/Button';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
+import { LottieLoader } from '../../../components/common/LottieLoader';
 import { toast } from 'sonner';
 
 type View = 'CATALOGUE' | 'STOCK';
@@ -44,6 +45,7 @@ export const AdminProductsPage: React.FC = () => {
   // Modal State (Add & Edit)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<AdminProductPayload>({
@@ -195,6 +197,8 @@ export const AdminProductsPage: React.FC = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       if (editingProduct) {
         // Edit mode - update product first, then handle variants
@@ -254,6 +258,8 @@ export const AdminProductsPage: React.FC = () => {
     } catch (err: any) {
       const msg = err?.message || (editingProduct ? 'Échec de la modification' : 'Échec de la création du produit');
       toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1228,16 +1234,24 @@ export const AdminProductsPage: React.FC = () => {
               </div>
 
               <div className="pt-4 border-t border-[#e1e3e5] flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 border border-[#e1e3e5] text-[#1a1a1a] hover:bg-[#f6f6f7] font-semibold rounded-xl transition-colors cursor-pointer"
-                >
-                  Annuler
-                </button>
-                <Button type="submit" size="md">
-                  {editingProduct ? 'Enregistrer les modifications' : 'Créer le produit'}
-                </Button>
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center w-full py-2">
+                    <LottieLoader size={70} />
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddModalOpen(false)}
+                      className="px-4 py-2 border border-[#e1e3e5] text-[#1a1a1a] hover:bg-[#f6f6f7] font-semibold rounded-xl transition-colors cursor-pointer"
+                    >
+                      Annuler
+                    </button>
+                    <Button type="submit" size="md" disabled={isSubmitting}>
+                      {editingProduct ? 'Enregistrer les modifications' : 'Créer le produit'}
+                    </Button>
+                  </>
+                )}
               </div>
             </form>
           </div>

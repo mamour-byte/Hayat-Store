@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Product } from '../../../types';
 import { ProductCard } from './ProductCard';
-import { Spinner } from '../../../components/ui/Spinner';
+import { LottieLoader } from '../../../components/common/LottieLoader';
 import { PackageX } from 'lucide-react';
 
 interface ProductGridProps {
@@ -13,7 +13,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading })
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
-        <Spinner size="lg" />
+        <LottieLoader size={160} />
       </div>
     );
   }
