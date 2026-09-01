@@ -34,11 +34,11 @@ export interface ProductVariant {
   sku: string;
   name?: string | null;
   price?: string | number | null;
-  stock: number;
-  reservedStock?: number;
+  quantity: number;
   attributes?: Record<string, any> | null;
   imageId?: string | null;
   isActive?: boolean;
+  trackInventory?: boolean;
 }
 
 export interface Product {
@@ -51,7 +51,7 @@ export interface Product {
   price: string | number;
   compareAtPrice?: string | number | null;
   hasVariants: boolean;
-  stock: number;
+  quantity: number;
   status: ProductStatus;
   isFeatured?: boolean;
   categoryId?: string | null;
@@ -60,6 +60,7 @@ export interface Product {
   brand?: Brand | null;
   images: ProductImage[];
   variants?: ProductVariant[];
+  trackInventory?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

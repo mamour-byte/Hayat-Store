@@ -42,8 +42,9 @@ export interface TopProductStat {
 export interface StockAlertStat {
   id: string;
   name: string;
-  stock: number;
+  quantity: number;
   minStock?: number;
+  trackInventory?: boolean;
   sku?: string;
 }
 

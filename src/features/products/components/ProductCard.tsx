@@ -19,6 +19,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check if product has variants and requires selection
+    if (product.hasVariants && (!product.variants || product.variants.length === 0)) {
+      toast.error('Ce produit a des variantes mais aucune n\'est disponible');
+      return;
+    }
+    
     try {
       await addItem({ productId: product.id, quantity: 1 });
       toast.success(`"${product.name}" ajouté au panier`);
@@ -58,10 +65,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         {/* Price & Action */}
         <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-[#f1f2f3]">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-bold text-[#1a1a1a] text-sm">
-              {formatPrice(price)}
-            </span>
+          <div className="flex flex-col">
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-bold text-[#1a1a1a] text-sm">
+                {formatPrice(price)}
+              </span>
+            </div>
+
             {comparePrice && (
               <span className="text-xs text-[#6d7175] line-through">
                 {formatPrice(comparePrice)}
@@ -74,7 +84,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             className="p-2 text-[#008060] hover:bg-[#f0f9f6] rounded-lg transition-colors cursor-pointer"
             title="Ajouter au panier"
           >
-            <ShoppingCart className="w-4 h-4" />
+            <ShoppingCart className="w-5 h-5" />
           </button>
         </div>
       </div>

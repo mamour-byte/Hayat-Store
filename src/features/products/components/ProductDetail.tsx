@@ -47,7 +47,21 @@ export const ProductDetail: React.FC = () => {
 
   const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
   const currentPrice = selectedVariant?.price ?? product.price;
-  const currentStock = selectedVariant?.stock ?? product.stock;
+
+  const hasVariants = product.hasVariants && product.variants && product.variants.length > 0;
+  const tracksInventory = (
+    selectedVariant?.trackInventory ??
+    product.trackInventory ??
+    (hasVariants ? product.variants!.some((v) => v.trackInventory !== false) : true)
+  ) !== false;
+
+  // Stock is always tracked at the variant level when the product has variants.
+  // The base product.quantity is only meaningful for simple (non-variant) products.
+  const currentStock = selectedVariant
+    ? Number(selectedVariant.quantity) || 0
+    : hasVariants
+      ? product.variants!.reduce((acc, v) => acc + (Number(v.quantity) || 0), 0)
+      : Number(product.quantity) || 0;
 
   const handleAddToCart = async () => {
     if (product.hasVariants && !selectedVariantId) {
@@ -69,7 +83,7 @@ export const ProductDetail: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Gallery */}
-        <div className="space-y-3">
+        <div className="space-y-3 lg:max-w-[520px] lg:justify-self-center">
           <div className="aspect-square rounded-2xl overflow-hidden bg-[#f6f6f7]">
             {product.images?.[activeImage] ? (
               <img
@@ -131,10 +145,24 @@ export const ProductDetail: React.FC = () => {
           </div>
 
           {/* Stock */}
-          <div className={`flex items-center gap-2 text-sm font-medium ${currentStock > 0 ? 'text-[#008060]' : 'text-rose-500'}`}>
-            <span className={`w-2 h-2 rounded-full ${currentStock > 0 ? 'bg-[#008060]' : 'bg-rose-500'}`} />
-            {currentStock > 0 ? `${currentStock} en stock` : 'Rupture de stock'}
-          </div>
+          {tracksInventory ? (
+            hasVariants && !selectedVariant ? (
+              <div className="flex items-center gap-2 text-sm font-medium text-[#6d7175]">
+                <span className="w-2 h-2 rounded-full bg-slate-400" />
+                Sélectionnez une variante pour voir le stock
+              </div>
+            ) : (
+              <div className={`flex items-center gap-2 text-sm font-medium ${currentStock > 0 ? 'text-[#008060]' : 'text-rose-500'}`}>
+                <span className={`w-2 h-2 rounded-full ${currentStock > 0 ? 'bg-[#008060]' : 'bg-rose-500'}`} />
+                {currentStock > 0 ? `${currentStock} en stock` : 'Rupture de stock'}
+              </div>
+            )
+          ) : (
+            <div className="flex items-center gap-2 text-sm font-medium text-[#6d7175]">
+              <span className="w-2 h-2 rounded-full bg-slate-400" />
+              Disponible (stock non suivi)
+            </div>
+          )}
 
           {product.description && (
             <p className="text-[#6d7175] leading-relaxed">
@@ -165,7 +193,7 @@ export const ProductDetail: React.FC = () => {
                 {quantity}
               </span>
               <button
-                onClick={() => setQuantity((q) => Math.min(currentStock, q + 1))}
+                onClick={() => setQuantity((q) => (tracksInventory ? Math.min(currentStock, q + 1) : q + 1))}
                 className="p-2.5 hover:bg-[#f6f6f7] transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -179,10 +207,17 @@ export const ProductDetail: React.FC = () => {
             className="w-full"
             leftIcon={<ShoppingCart className="w-5 h-5" />}
             isLoading={addingToCart}
-            disabled={currentStock === 0}
+            disabled={
+              (tracksInventory && currentStock === 0) ||
+              (tracksInventory && hasVariants && !selectedVariant)
+            }
             onClick={handleAddToCart}
           >
-            {currentStock === 0 ? 'Rupture de stock' : 'Ajouter au panier'}
+            {tracksInventory && currentStock === 0
+              ? 'Rupture de stock'
+              : tracksInventory && hasVariants && !selectedVariant
+              ? 'Sélectionnez une variante'
+              : 'Ajouter au panier'}
           </Button>
         </div>
       </div>

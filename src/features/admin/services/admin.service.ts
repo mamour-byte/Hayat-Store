@@ -3,6 +3,8 @@ import { API_ENDPOINTS } from '../../../lib/api/endpoints';
 import type {
   Order,
   Product,
+  ProductImage,
+  ProductVariant,
   Category,
   Coupon,
   Review,
@@ -15,6 +17,8 @@ import type {
   ShippingZonePayload,
   DeliveryNeighborhood,
   DeliveryNeighborhoodPayload,
+  InventoryProductRow,
+  InventoryMovementsResponse,
 } from '../../../types';
 import { OrderStatus, PaymentStatus, ProductStatus, UserRole, UserStatus, CouponType, ReviewStatus } from '../../../types/enums';
 
@@ -31,14 +35,18 @@ export interface AdminProductPayload {
   name: string;
   price: number;
   compareAtPrice?: number;
-  stock: number;
+  quantity: number;
   categoryId?: string;
   categoryName?: string;
   imageUrl?: string;
+  images?: Array<{ id?: string; url: string; isPrimary?: boolean; file?: File }>;
   description?: string;
   status: ProductStatus;
   sku?: string;
   slug?: string;
+  hasVariants?: boolean;
+  variants?: ProductVariant[];
+  trackInventory?: boolean;
 }
 
 export interface AdminCouponPayload {
@@ -256,7 +264,7 @@ let mockProductsList: Product[] = [
     description: 'Fragrance raffinée aux notes orientales et boisées, tenue longue durée.',
     price: 45000,
     compareAtPrice: 55000,
-    stock: 18,
+    quantity: 18,
     hasVariants: false,
     status: ProductStatus.ACTIVE,
     sku: 'PAR-MUSC-01',
@@ -272,7 +280,7 @@ let mockProductsList: Product[] = [
     description: 'Bazin riche brodé à la main, idéal pour cérémonies et événements.',
     price: 28000,
     compareAtPrice: 35000,
-    stock: 7,
+    quantity: 7,
     hasVariants: false,
     status: ProductStatus.ACTIVE,
     sku: 'VE-BAZ-02',
@@ -288,7 +296,7 @@ let mockProductsList: Product[] = [
     description: 'Shampoing bio, masque nourrissant et sérum éclat au beurre de karité bio.',
     price: 18500,
     compareAtPrice: 22000,
-    stock: 24,
+    quantity: 24,
     hasVariants: false,
     status: ProductStatus.ACTIVE,
     sku: 'BEA-CAP-03',
@@ -304,7 +312,7 @@ let mockProductsList: Product[] = [
     description: 'Design minimaliste haut de gamme, boîtier en acier inoxydable et verre saphir.',
     price: 31000,
     compareAtPrice: 40000,
-    stock: 3,
+    quantity: 3,
     hasVariants: false,
     status: ProductStatus.ACTIVE,
     sku: 'ACC-MON-04',
@@ -320,7 +328,7 @@ let mockProductsList: Product[] = [
     description: 'Crée une ambiance apaisante avec brume fraîche et éclairage d\'ambiance LED.',
     price: 35000,
     compareAtPrice: 42000,
-    stock: 12,
+    quantity: 12,
     hasVariants: false,
     status: ProductStatus.ACTIVE,
     sku: 'MAI-DIF-05',
@@ -460,8 +468,8 @@ export const adminService = {
           customers: mockUsersList.filter((u) => u.role === UserRole.CUSTOMER).length,
           products: mockProductsList.length,
           activeProducts: mockProductsList.filter((p) => p.status === ProductStatus.ACTIVE).length,
-          lowStockProducts: mockProductsList.filter((p) => p.stock > 0 && p.stock <= 5).length,
-          outOfStockProducts: mockProductsList.filter((p) => p.stock === 0).length,
+          lowStockProducts: mockProductsList.filter((p) => p.quantity > 0 && p.quantity <= 5).length,
+          outOfStockProducts: mockProductsList.filter((p) => p.quantity === 0).length,
           pendingOrders: mockOrdersList.filter((o) => o.status === OrderStatus.PENDING).length,
         },
         sales: {
@@ -483,11 +491,11 @@ export const adminService = {
         },
         products: {
           stockAlerts: mockProductsList
-            .filter((p) => p.stock <= 7)
+            .filter((p) => p.quantity <= 5)
             .map((p) => ({
               id: p.id,
               name: p.name,
-              stock: p.stock,
+              quantity: p.quantity,
               sku: p.sku || undefined,
             })),
           topProducts: mockProductsList.slice(0, 5).map((p) => ({
@@ -592,16 +600,16 @@ export const adminService = {
           active: mockProductsList.filter((p) => p.status === ProductStatus.ACTIVE).length,
           draft: mockProductsList.filter((p) => p.status === ProductStatus.DRAFT).length,
           archived: mockProductsList.filter((p) => p.status === ProductStatus.ARCHIVED).length,
-          lowStock: mockProductsList.filter((p) => p.stock > 0 && p.stock <= 5).length,
-          outOfStock: mockProductsList.filter((p) => p.stock === 0).length,
-          stockValue: mockProductsList.reduce((acc, p) => acc + Number(p.price) * p.stock, 0),
+          lowStock: mockProductsList.filter((p) => p.quantity > 0 && p.quantity <= 5).length,
+          outOfStock: mockProductsList.filter((p) => p.quantity === 0).length,
+          stockValue: mockProductsList.reduce((acc, p) => acc + Number(p.price) * p.quantity, 0),
         },
         stockAlerts: mockProductsList
-          .filter((p) => p.stock <= 7)
+          .filter((p) => p.quantity <= 5)
           .map((p) => ({
             id: p.id,
             name: p.name,
-            stock: p.stock,
+            quantity: p.quantity,
             sku: p.sku || undefined,
           })),
         topProducts: mockProductsList.slice(0, 5).map((p) => ({
@@ -683,25 +691,62 @@ export const adminService = {
     }
   },
 
+  getProductById: async (productId: string): Promise<Product> => {
+    try {
+      const { data } = await apiClient.get<Product>(API_ENDPOINTS.PRODUCTS.BY_ID(productId));
+      return data;
+    } catch {
+      const prod = mockProductsList.find((p) => p.id === productId);
+      if (prod) return prod;
+      throw new Error('Product not found');
+    }
+  },
+
   createProduct: async (payload: AdminProductPayload): Promise<Product> => {
     const slug = payload.slug || payload.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    const apiPayload = {
+    
+    console.log('Creating product with images:', payload.images);
+    
+    // Convert images to proper format for API - match backend ProductImage structure
+    const imagesPayload = payload.images?.filter(img => !img.file).map(img => ({
+      url: img.url,
+      isPrimary: img.isPrimary || false,
+      publicId: img.id,
+      alt: payload.name, // Use product name as alt text
+    }));
+
+    const apiPayload: any = {
       name: payload.name,
       slug: slug || `product-${Date.now()}`,
       price: Number(payload.price),
       compareAtPrice: payload.compareAtPrice ? Number(payload.compareAtPrice) : undefined,
-      stock: Number(payload.stock),
+      quantity: Number(payload.quantity),
       categoryId: payload.categoryId && payload.categoryId.trim() !== '' ? payload.categoryId : undefined,
       imageUrl: payload.imageUrl && payload.imageUrl.trim() !== '' ? payload.imageUrl : undefined,
+      images: imagesPayload,
       description: payload.description || undefined,
       status: payload.status,
       sku: payload.sku && payload.sku.trim() !== '' ? payload.sku : undefined,
+      hasVariants: payload.hasVariants || false,
+      variants: payload.variants || [],
+      trackInventory: payload.trackInventory !== false,
     };
+
+    console.log('API Payload for product creation:', apiPayload);
 
     try {
       const { data } = await apiClient.post<Product>(API_ENDPOINTS.PRODUCTS.LIST, apiPayload);
-      return data;
+      console.log('Product created successfully:', data);
+
+      // Upload files only after the product exists, then attach each URL to ProductImage.
+      const pendingImages = payload.images?.filter((image) => image.file) || [];
+      for (const image of pendingImages) {
+        await adminService.uploadProductImage(data.id, image.file!, payload.name);
+      }
+
+      return pendingImages.length > 0 ? await adminService.getProductById(data.id) : data;
     } catch (err: any) {
+      console.error('Product creation failed:', err);
       // If server responded with an error message, propagate it to UI
       if (err?.response?.data) {
         const msg = Array.isArray(err.response.data.message)
@@ -717,6 +762,14 @@ export const adminService = {
         ? { id: 'cat-gen', name: payload.categoryName, slug: payload.categoryName.toLowerCase().replace(/\s+/g, '-') }
         : undefined;
 
+      // Convert images back to ProductImage format for mock
+      const mockImages = (payload.images || []).map((img, idx) => ({
+        id: img.id || `img-${Date.now()}-${idx}`,
+        url: img.url,
+        isPrimary: img.isPrimary || false,
+        publicId: img.id,
+      }));
+
       const newProd: Product = {
         id: `prod-${Date.now()}`,
         name: payload.name,
@@ -724,13 +777,13 @@ export const adminService = {
         description: payload.description || '',
         price: payload.price,
         compareAtPrice: payload.compareAtPrice,
-        stock: payload.stock,
-        hasVariants: false,
+        quantity: payload.quantity,
+        hasVariants: payload.hasVariants || false,
         status: payload.status,
         sku: payload.sku || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
-        images: payload.imageUrl
-          ? [{ id: `img-${Date.now()}`, url: payload.imageUrl, isPrimary: true }]
-          : [{ id: `img-${Date.now()}`, url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80', isPrimary: true }],
+        images: mockImages.length > 0 ? mockImages : [{ id: `img-${Date.now()}`, url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80', isPrimary: true }],
+        variants: payload.variants || [],
+        trackInventory: payload.trackInventory !== false,
         categoryId: payload.categoryId || categoryObj?.id,
         category: categoryObj,
         createdAt: new Date().toISOString(),
@@ -749,9 +802,30 @@ export const adminService = {
     if (apiPayload.categoryId === '') delete apiPayload.categoryId;
     if (apiPayload.imageUrl === '') delete apiPayload.imageUrl;
 
+    // Convert images to proper format for API
+    if (payload.images) {
+      apiPayload.images = payload.images.filter(img => !img.file).map(img => ({
+        url: img.url,
+        isPrimary: img.isPrimary || false,
+        publicId: img.id,
+      }));
+    }
+
+    // Ensure variants and hasVariants are included
+    if (payload.hasVariants !== undefined) {
+      apiPayload.hasVariants = payload.hasVariants;
+    }
+    if (payload.variants) {
+      apiPayload.variants = payload.variants;
+    }
+
     try {
       const { data } = await apiClient.patch<Product>(API_ENDPOINTS.PRODUCTS.BY_ID(productId), apiPayload);
-      return data;
+      const pendingImages = payload.images?.filter((image) => image.file) || [];
+      for (const image of pendingImages) {
+        await adminService.uploadProductImage(productId, image.file!, payload.name);
+      }
+      return pendingImages.length > 0 ? await adminService.getProductById(productId) : data;
     } catch (err: any) {
       if (err?.response?.data) {
         const msg = Array.isArray(err.response.data.message)
@@ -768,11 +842,22 @@ export const adminService = {
           ? { id: payload.categoryId || current.category?.id || 'cat-gen', name: payload.categoryName, slug: payload.categoryName.toLowerCase().replace(/\s+/g, '-') }
           : current.category;
 
+        // Convert images to proper ProductImage format
+        const convertedImages = payload.images?.map((img, idx) => ({
+          id: img.id || `img-${Date.now()}-${idx}`,
+          url: img.url,
+          isPrimary: img.isPrimary || false,
+          publicId: img.id,
+        }));
+
         mockProductsList[idx] = {
           ...current,
           ...payload,
           categoryId: payload.categoryId || current.categoryId,
           category: categoryObj,
+          images: convertedImages || current.images,
+          hasVariants: payload.hasVariants !== undefined ? payload.hasVariants : current.hasVariants,
+          variants: payload.variants !== undefined ? payload.variants : current.variants,
           updatedAt: new Date().toISOString(),
         };
         return mockProductsList[idx];
@@ -800,12 +885,405 @@ export const adminService = {
   },
 
   deleteProduct: async (productId: string): Promise<void> => {
+    const url = API_ENDPOINTS.PRODUCTS.BY_ID(productId);
+    console.log('Attempting to archive product:', { productId, url });
     try {
-      await apiClient.delete(API_ENDPOINTS.PRODUCTS.BY_ID(productId));
+      // Archive product instead of deleting it
+      const response = await apiClient.patch(url, { status: 'ARCHIVED' });
+      console.log('Archive product response:', response.status, response.data);
+      // Update mock list to reflect archived status
+      const idx = mockProductsList.findIndex((p) => p.id === productId);
+      if (idx !== -1) {
+        mockProductsList[idx] = { ...mockProductsList[idx], status: 'ARCHIVED' as any };
+      }
+    } catch (err: any) {
+      console.error('Failed to archive product from backend:', err);
+      console.error('Error response:', err?.response?.data);
+      console.error('Error status:', err?.response?.status);
+      const errorMessage = err?.response?.data?.message || err?.message || 'Erreur lors de l\'archivage du produit';
+      throw new Error(errorMessage);
+    }
+  },
+
+  // --- IMAGES & CLOUDINARY UPLOAD ---
+
+  /**
+   * Téléverse un fichier image vers Cloudinary via le backend
+   */
+  uploadImageFile: async (file: File): Promise<{ url: string; publicId?: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      console.log('Uploading image to Cloudinary via backend:', file.name, file.size);
+      const { data } = await apiClient.post<{ url: string; publicId?: string }>(
+        API_ENDPOINTS.PRODUCTS.UPLOAD_IMAGE,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 30000, // 30 second timeout for image upload
+        },
+      );
+      console.log('Upload successful:', data);
+      
+      // Validate response
+      if (!data.url) {
+        throw new Error('URL manquante dans la réponse du serveur');
+      }
+      
+      return data;
+    } catch (err: any) {
+      console.error('Backend upload-image endpoint failed:', err);
+      console.error('Error details:', {
+        status: err?.response?.status,
+        statusText: err?.response?.statusText,
+        data: err?.response?.data,
+        message: err?.message,
+      });
+      
+      let errorMessage = 'Erreur lors du téléversement';
+      
+      if (err?.response?.status === 413) {
+        errorMessage = 'Fichier trop volumineux (max 10MB)';
+      } else if (err?.response?.status === 415) {
+        errorMessage = 'Format de fichier non supporté';
+      } else if (err?.response?.status === 500) {
+        errorMessage = 'Erreur serveur Cloudinary - Réessayez';
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
+  },
+
+  /**
+   * Téléverse une image et l'associe directement à un produit existant
+   */
+  uploadProductImage: async (productId: string, file: File, alt?: string): Promise<ProductImage> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const { data } = await apiClient.post<ProductImage>(
+        API_ENDPOINTS.PRODUCTS.IMAGES(productId),
+        formData,
+        {
+          params: alt ? { alt } : undefined,
+          headers: { 'Content-Type': 'multipart/form-data' },
+        },
+      );
+      return data;
+    } catch (err: any) {
+      console.warn('Backend product image upload failed, storing in mock', err);
+      const newImg: ProductImage = {
+        id: `img-${Date.now()}`,
+        url: URL.createObjectURL(file),
+        alt: alt || file.name,
+        isPrimary: false,
+        position: 0,
+      };
+      const prod = mockProductsList.find((p) => p.id === productId);
+      if (prod) {
+        prod.images = [...(prod.images || []), newImg];
+      }
+      return newImg;
+    }
+  },
+
+  /**
+   * Définir l'image principale d'un produit
+   */
+  setProductPrimaryImage: async (productId: string, imageId: string): Promise<ProductImage> => {
+    try {
+      const { data } = await apiClient.patch<ProductImage>(
+        API_ENDPOINTS.PRODUCTS.IMAGE_PRIMARY(productId, imageId),
+      );
+      return data;
+    } catch {
+      const prod = mockProductsList.find((p) => p.id === productId);
+      if (prod && prod.images) {
+        prod.images = prod.images.map((img) => ({
+          ...img,
+          isPrimary: img.id === imageId,
+        }));
+        return prod.images.find((img) => img.id === imageId)!;
+      }
+      throw new Error('Image not found');
+    }
+  },
+
+  /**
+   * Supprimer une image d'un produit
+   */
+  deleteProductImage: async (productId: string, imageId: string): Promise<void> => {
+    try {
+      await apiClient.delete(API_ENDPOINTS.PRODUCTS.IMAGE_DELETE(productId, imageId));
+    } catch (err: any) {
+      console.error('Failed to delete image from backend:', err);
+      const errorMessage = err?.response?.data?.message || err?.message || 'Erreur lors de la suppression de l\'image';
+      throw new Error(errorMessage);
+    } finally {
+      const prod = mockProductsList.find((p) => p.id === productId);
+      if (prod && prod.images) {
+        prod.images = prod.images.filter((img) => img.id !== imageId);
+        // If we deleted the primary image and there are other images, set the first one as primary
+        if (prod.images.length > 0 && !prod.images.some(img => img.isPrimary)) {
+          prod.images[0] = { ...prod.images[0], isPrimary: true };
+        }
+      }
+    }
+  },
+
+  // --- VARIANTES DE PRODUITS (CRUD) ---
+
+  /**
+   * Récupérer toutes les variantes d'un produit
+   */
+  getProductVariants: async (productId: string): Promise<ProductVariant[]> => {
+    try {
+      const { data } = await apiClient.get<ProductVariant[] | { data: ProductVariant[] }>(
+        API_ENDPOINTS.PRODUCTS.VARIANTS(productId),
+      );
+      return Array.isArray(data) ? data : data.data || [];
+    } catch {
+      const prod = mockProductsList.find((p) => p.id === productId);
+      return prod?.variants || [];
+    }
+  },
+
+  /**
+   * Créer une nouvelle variante pour un produit
+   */
+  createProductVariant: async (productId: string, payload: Partial<ProductVariant>): Promise<ProductVariant> => {
+    // Format payload according to backend DTO
+    const variantPayload = {
+      sku: payload.sku,
+      name: payload.name,
+      price: payload.price !== undefined ? Number(payload.price) : undefined,
+      quantity: payload.quantity !== undefined ? Number(payload.quantity) : 0,
+      attributes: payload.attributes || {},
+      trackInventory: payload.trackInventory !== undefined ? payload.trackInventory : undefined,
+    };
+
+    try {
+      const { data } = await apiClient.post<ProductVariant>(
+        API_ENDPOINTS.PRODUCTS.VARIANTS(productId),
+        variantPayload,
+      );
+      console.log('Variant created successfully:', data);
+      return data;
+    } catch (err: any) {
+      console.error('Failed to create variant:', err);
+      if (err?.response?.data) {
+        const msg = Array.isArray(err.response.data.message)
+          ? err.response.data.message.join(', ')
+          : err.response.data.message || err.response.data.error;
+        if (msg) throw new Error(msg);
+      }
+      throw new Error('Erreur lors de la création de la variante');
+    }
+  },
+
+  /**
+   * Modifier une variante existante
+   */
+  updateProductVariant: async (
+    productId: string,
+    variantId: string,
+    payload: Partial<ProductVariant>,
+  ): Promise<ProductVariant> => {
+    try {
+      const { data } = await apiClient.patch<ProductVariant>(
+        API_ENDPOINTS.PRODUCTS.VARIANT(productId, variantId),
+        payload,
+      );
+      return data;
+    } catch (err: any) {
+      if (err?.response?.data) {
+        const msg = Array.isArray(err.response.data.message)
+          ? err.response.data.message.join(', ')
+          : err.response.data.message || err.response.data.error;
+        if (msg) throw new Error(msg);
+      }
+      const prod = mockProductsList.find((p) => p.id === productId);
+      if (prod && prod.variants) {
+        const idx = prod.variants.findIndex((v) => v.id === variantId);
+        if (idx !== -1) {
+          prod.variants[idx] = {
+            ...prod.variants[idx],
+            ...payload,
+            price: payload.price !== undefined ? Number(payload.price) : prod.variants[idx].price,
+            quantity: payload.quantity !== undefined ? Number(payload.quantity) : prod.variants[idx].quantity,
+          };
+          return prod.variants[idx];
+        }
+      }
+      throw new Error('Variante introuvable');
+    }
+  },
+
+  /**
+   * Supprimer une variante
+   */
+  deleteProductVariant: async (productId: string, variantId: string): Promise<void> => {
+    try {
+      await apiClient.delete(API_ENDPOINTS.PRODUCTS.VARIANT(productId, variantId));
     } catch {
       // Mock delete fallback
     } finally {
-      mockProductsList = mockProductsList.filter((p) => p.id !== productId);
+      const prod = mockProductsList.find((p) => p.id === productId);
+      if (prod && prod.variants) {
+        prod.variants = prod.variants.filter((v) => v.id !== variantId);
+        if (prod.variants.length === 0) {
+          prod.hasVariants = false;
+        }
+      }
+    }
+  },
+
+  /**
+   * Mettre à jour absolument le stock d'un produit (et de ses variantes si fourni)
+   */
+  updateProductStock: async (
+    productId: string,
+    payload: { quantity: number; variantId?: string },
+  ): Promise<Product> => {
+    if (payload.variantId) {
+      const variant = await adminService.updateProductVariant(productId, payload.variantId, {
+        quantity: payload.quantity,
+      });
+      const prod = await adminService.getProductById(productId);
+      const variants = prod.variants?.map((v) => (v.id === variant.id ? variant : v));
+      return { ...prod, variants };
+    }
+
+    return adminService.updateProduct(productId, { quantity: payload.quantity });
+  },
+
+  /**
+   * Réapprovisionner le stock d'un produit épuisé (ou non) en ajoutant une quantité
+   */
+  restockProduct: async (
+    productId: string,
+    quantity: number,
+    variantId?: string,
+  ): Promise<Product> => {
+    if (variantId) {
+      const prod = await adminService.getProductById(productId);
+      const variant = prod.variants?.find((v) => v.id === variantId);
+      const current = variant?.quantity ?? 0;
+      const updated = await adminService.updateProductVariant(productId, variantId, {
+        quantity: current + quantity,
+      });
+      const variants = variant
+        ? prod.variants?.map((v) => (v.id === variant.id ? updated : v))
+        : prod.variants;
+      return { ...prod, variants };
+    }
+
+    const prod = await adminService.getProductById(productId);
+    const currentStock = Number(prod.quantity) || 0;
+    return adminService.updateProduct(productId, { quantity: currentStock + quantity });
+  },
+
+  // --- INVENTORY MODULE ---
+
+  /**
+   * GET /inventory — vue d'ensemble du stock (IN_STOCK / OUT_OF_STOCK / NOT_TRACKED)
+   */
+  getInventoryOverview: async (): Promise<InventoryProductRow[]> => {
+    try {
+      const { data } = await apiClient.get<InventoryProductRow[]>(
+        API_ENDPOINTS.INVENTORY.OVERVIEW,
+      );
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return mockProductsList.map((p) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku ?? null,
+        status: p.status,
+        trackInventory: p.trackInventory !== false,
+        quantity: p.quantity,
+        stockState:
+          p.trackInventory === false
+            ? 'NOT_TRACKED'
+            : p.quantity <= 0
+              ? 'OUT_OF_STOCK'
+              : 'IN_STOCK',
+        hasVariants: p.hasVariants,
+        variants: p.variants?.map((v) => ({
+          id: v.id,
+          name: v.name ?? null,
+          sku: v.sku,
+          trackInventory: v.trackInventory !== false,
+          quantity: v.quantity,
+          isActive: v.isActive ?? true,
+          stockState:
+            v.trackInventory === false
+              ? 'NOT_TRACKED'
+              : v.quantity <= 0
+                ? 'OUT_OF_STOCK'
+                : 'IN_STOCK',
+        })),
+      }));
+    }
+  },
+
+  /**
+   * GET /inventory/movements — historique paginé et filtrable
+   */
+  getInventoryMovements: async (params?: { page?: number; limit?: number; productId?: string; type?: string }): Promise<InventoryMovementsResponse> => {
+    try {
+      const { data } = await apiClient.get<InventoryMovementsResponse>(
+        API_ENDPOINTS.INVENTORY.MOVEMENTS,
+        { params },
+      );
+      return data;
+    } catch {
+      return {
+        data: [],
+        meta: { total: 0, page: params?.page || 1, limit: params?.limit || 10, pageCount: 0 },
+      };
+    }
+  },
+
+  /**
+   * POST /inventory/adjust — ajustement manuel du stock (fixe le stock, avec raison)
+   */
+  adjustInventory: async (payload: { productId: string; variantId?: string; newQuantity: number; reason: string }): Promise<any> => {
+    try {
+      const { data } = await apiClient.post(API_ENDPOINTS.INVENTORY.ADJUST, payload);
+      return data;
+    } catch (err: any) {
+      if (err?.response?.data) {
+        const msg = Array.isArray(err.response.data.message)
+          ? err.response.data.message.join(', ')
+          : err.response.data.message || err.response.data.error;
+        if (msg) throw new Error(msg);
+      }
+      throw new Error('Erreur lors de l\'ajustement du stock');
+    }
+  },
+
+  /**
+   * POST /inventory/receive — réception fournisseur (incrément du stock)
+   */
+  receiveInventory: async (payload: { productId: string; variantId?: string; quantity: number; reason?: string }): Promise<any> => {
+    try {
+      const { data } = await apiClient.post(API_ENDPOINTS.INVENTORY.RECEIVE, payload);
+      return data;
+    } catch (err: any) {
+      if (err?.response?.data) {
+        const msg = Array.isArray(err.response.data.message)
+          ? err.response.data.message.join(', ')
+          : err.response.data.message || err.response.data.error;
+        if (msg) throw new Error(msg);
+      }
+      throw new Error('Erreur lors de la réception du stock');
     }
   },
 

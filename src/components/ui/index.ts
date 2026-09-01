@@ -5,3 +5,4 @@ export { Badge } from './Badge';
 export { Modal } from './Modal';
 export { Spinner } from './Spinner';
 export { Card } from './Card';
+export { ImageUpload } from './ImageUpload';

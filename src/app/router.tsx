@@ -25,6 +25,7 @@ import { AdminCouponsPage } from '../features/admin/pages/AdminCouponsPage';
 import { AdminReviewsPage } from '../features/admin/pages/AdminReviewsPage';
 import { AdminUsersPage } from '../features/admin/pages/AdminUsersPage';
 import { AdminShippingZonesPage } from '../features/admin/pages/AdminShippingZonesPage';
+import { AdminInventoryPage } from '../features/admin/pages/AdminInventoryPage';
 import { UserRole } from '../types/enums';
 
 export const router = createBrowserRouter([
@@ -63,6 +64,7 @@ export const router = createBrowserRouter([
           { index: true, element: <AdminDashboardPage /> },
           { path: 'orders', element: <AdminOrdersPage /> },
           { path: 'products', element: <AdminProductsPage /> },
+          { path: 'inventory', element: <AdminInventoryPage /> },
           { path: 'categories', element: <AdminCategoriesPage /> },
           { path: 'coupons', element: <AdminCouponsPage /> },
           { path: 'reviews', element: <AdminReviewsPage /> },

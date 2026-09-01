@@ -21,7 +21,8 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
       <div className="flex flex-wrap gap-2">
         {variants.map((variant) => {
           const isSelected = variant.id === selectedVariantId;
-          const isOutOfStock = variant.stock <= 0;
+          const isNonTracked = variant.trackInventory === false;
+          const isOutOfStock = !isNonTracked && variant.quantity <= 0;
           return (
             <button
               key={variant.id}

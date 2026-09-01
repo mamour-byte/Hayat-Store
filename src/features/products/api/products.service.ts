@@ -14,17 +14,23 @@ export const productsService = {
       params,
     });
 
+    let products: Product[];
+    let meta: any;
+
     if (Array.isArray(data)) {
-      return {
-        data,
-        meta: { total: data.length, page: 1, limit: data.length, totalPages: 1 },
-      };
+      products = data;
+      meta = { total: data.length, page: 1, limit: data.length, totalPages: 1 };
+    } else {
+      products = Array.isArray(data.data) ? data.data : [];
+      meta = data.meta ?? { total: 0, page: 1, limit: 0, totalPages: 0 };
     }
 
+    // Filter out archived products for public catalog
+    const filteredProducts = products.filter(p => p.status !== 'ARCHIVED');
+
     return {
-      ...data,
-      data: Array.isArray(data.data) ? data.data : [],
-      meta: data.meta ?? { total: 0, page: 1, limit: 0, totalPages: 0 },
+      data: filteredProducts,
+      meta: { ...meta, total: filteredProducts.length },
     };
   },
 

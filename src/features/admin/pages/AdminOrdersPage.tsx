@@ -360,11 +360,19 @@ export const AdminOrdersPage: React.FC = () => {
                 <div className="border border-[#e1e3e5] rounded-xl overflow-hidden divide-y divide-[#e1e3e5]">
                   {selectedOrder.items.map((item) => (
                     <div key={item.id} className="p-3.5 flex items-center justify-between bg-white">
-                      <div>
+                      <div className="flex-1">
                         <p className="font-bold text-[#1a1a1a] text-sm">{item.productName}</p>
-                        <p className="text-[#6d7175]">Quantité : {item.quantity} x {formatPrice(item.unitPrice)}</p>
+                        {item.variantName && (
+                          <p className="text-[#008060] text-xs font-semibold mt-0.5">
+                            Variante : {item.variantName}
+                          </p>
+                        )}
+                        {item.sku && (
+                          <p className="text-[10px] text-[#6d7175] mt-0.5">SKU : {item.sku}</p>
+                        )}
+                        <p className="text-[#6d7175] mt-1">Quantité : {item.quantity} x {formatPrice(item.unitPrice)}</p>
                       </div>
-                      <span className="font-bold text-[#008060] text-sm">{formatPrice(item.total)}</span>
+                      <span className="font-bold text-[#008060] text-sm ml-4">{formatPrice(item.total)}</span>
                     </div>
                   ))}
                 </div>

@@ -9,4 +9,5 @@ export * from './shipping';
 export * from './coupon';
 export * from './review';
 export * from './stats';
+export * from './inventory';
 export * from './notification';

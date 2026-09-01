@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   FolderTree,
   MapPin,
+  Boxes,
 } from 'lucide-react';
 import { useAuth } from '../app/providers/AuthProvider';
 import { useAdminOrderNotifications } from '../features/admin/hooks/useAdminOrderNotifications';
@@ -22,7 +23,8 @@ import { useAdminOrderNotifications } from '../features/admin/hooks/useAdminOrde
 const NAV_ITEMS = [
   { to: '/admin', label: 'Vue d\'ensemble', icon: LayoutDashboard, exact: true },
   { to: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
-  { to: '/admin/products', label: 'Catalogue Produits', icon: Package },
+  { to: '/admin/products', label: 'Catalogue & Stocks', icon: Package },
+  { to: '/admin/inventory', label: 'Inventaire', icon: Boxes },
   { to: '/admin/categories', label: 'Catégories', icon: FolderTree },
   { to: '/admin/coupons', label: 'Coupons & Promos', icon: Tag },
   { to: '/admin/reviews', label: 'Avis Clients', icon: Star },

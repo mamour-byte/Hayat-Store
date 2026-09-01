@@ -12,6 +12,12 @@ export const API_ENDPOINTS = {
     LIST: '/products',
     BY_SLUG: (slug: string) => `/products/slug/${slug}`,
     BY_ID: (id: string) => `/products/${id}`,
+    UPLOAD_IMAGE: '/products/upload-image',
+    IMAGES: (productId: string) => `/products/${productId}/images`,
+    IMAGE_PRIMARY: (productId: string, imageId: string) => `/products/${productId}/images/${imageId}/primary`,
+    IMAGE_DELETE: (productId: string, imageId: string) => `/products/${productId}/images/${imageId}`,
+    VARIANTS: (productId: string) => `/products/${productId}/variants`,
+    VARIANT: (productId: string, variantId: string) => `/products/${productId}/variants/${variantId}`,
   },
   CATEGORIES: {
     LIST: '/categories',
@@ -68,6 +74,12 @@ export const API_ENDPOINTS = {
   USERS: {
     ADMIN_LIST: '/users',
     ADMIN_UPDATE: (id: string) => `/users/${id}`,
+  },
+  INVENTORY: {
+    OVERVIEW: '/inventory',
+    MOVEMENTS: '/inventory/movements',
+    ADJUST: '/inventory/adjust',
+    RECEIVE: '/inventory/receive',
   },
   STATS: {
     DASHBOARD: '/stats/dashboard',
