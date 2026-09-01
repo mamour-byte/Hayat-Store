@@ -93,7 +93,7 @@ export const useAdminOrderNotifications = () => {
           : payload.data;
       if (!candidate || !('id' in candidate)) return;
       const notification = candidate;
-      if (isCancelled || (notification.type && notification.type !== 'NEW_ORDER') || !notification.id) return;
+      if (isCancelled || (notification.type && notification.type !== 'ORDER_CREATED') || !notification.id) return;
       setNotifications((current) => [notification, ...current.filter((item) => item.id !== notification.id)].slice(0, MAX_NOTIFICATIONS));
       setUnreadCount((current) => current + 1);
       playNotificationSound();
