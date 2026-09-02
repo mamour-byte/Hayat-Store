@@ -5,6 +5,8 @@ export const API_ENDPOINTS = {
     REFRESH: '/auth/refresh',
     LOGOUT: '/auth/logout',
     ME: '/auth/me',
+    FORGOT_PASSWORD: '/auth/forgot-password',
+    RESET_PASSWORD: '/auth/reset-password',
   },
   PRODUCTS: {
     LIST: '/products',
@@ -46,6 +48,9 @@ export const API_ENDPOINTS = {
     METHODS: '/shipping/methods',
     ZONES: '/shipping/zones',
     ZONE: (id: string) => `/shipping/zones/${id}`,
+    NEIGHBORHOODS: '/shipping/neighborhoods',
+    NEIGHBORHOOD: (id: string) => `/shipping/neighborhoods/${id}`,
+    NEIGHBORHOODS_ADMIN: '/admin/shipping/neighborhoods',
     ADMIN_UPDATE_SHIPMENT: (id: string) => `/shipping/shipments/${id}/status`,
   },
   ORDERS: {
