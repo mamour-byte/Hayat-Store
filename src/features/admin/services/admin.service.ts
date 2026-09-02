@@ -802,6 +802,10 @@ export const adminService = {
     if (apiPayload.categoryId === '') delete apiPayload.categoryId;
     if (apiPayload.imageUrl === '') delete apiPayload.imageUrl;
 
+    if (apiPayload.price !== undefined) apiPayload.price = Number(apiPayload.price);
+    if (apiPayload.compareAtPrice !== undefined) apiPayload.compareAtPrice = Number(apiPayload.compareAtPrice);
+    if (apiPayload.quantity !== undefined) apiPayload.quantity = Number(apiPayload.quantity);
+
     // Convert images to proper format for API
     if (payload.images) {
       apiPayload.images = payload.images.filter(img => !img.file).map(img => ({
