@@ -14,6 +14,7 @@ import { useAuth } from '../app/providers/auth-context';
 import { useCart } from '../app/providers/cart-context';
 import { CartDrawer } from '../features/cart/components/CartDrawer';
 import { Input } from '../components/ui/Input';
+import { ScrollToTop } from '../components/common/ScrollToTop';
 
 export const MainLayout: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -41,6 +42,7 @@ export const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f6f6f7] text-[#1a1a1a]">
+      <ScrollToTop />
       {/* Top Banner */}
       <div className="bg-[#008060] text-white text-xs py-2 px-4 text-center font-medium tracking-wide">
         Livraison gratuite à partir de 25 000 FCFA partout à Dakar — Paiement Wave & Orange Money

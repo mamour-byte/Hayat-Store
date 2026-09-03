@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Package,
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../app/providers/auth-context';
 import { useAdminOrderNotifications } from '../features/admin/hooks/useAdminOrderNotifications';
+import { ScrollToTop } from '../components/common/ScrollToTop';
 
 const NAV_ITEMS = [
   { to: '/admin', label: 'Vue d\'ensemble', icon: LayoutDashboard, exact: true },
@@ -132,6 +133,7 @@ export const AdminLayout: React.FC = () => {
   };
 
   const closeSidebar = () => setIsSidebarOpen(false);
+  const mainRef = useRef<HTMLElement | null>(null);
 
   const activeLabel = NAV_ITEMS.find((item) => {
     if (item.exact) return location.pathname === '/admin';
@@ -140,6 +142,7 @@ export const AdminLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#f6f6f7] text-[#1a1a1a] overflow-hidden">
+      <ScrollToTop containerRef={mainRef} />
       <aside className="hidden lg:flex lg:flex-col w-64 bg-white border-r border-[#e1e3e5] shrink-0">
         <SidebarContent user={user} onLogout={handleLogout} onNavigate={closeSidebar} />
       </aside>
@@ -260,7 +263,7 @@ export const AdminLayout: React.FC = () => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
           <Outlet />
         </main>
       </div>
