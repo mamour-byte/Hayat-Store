@@ -22,15 +22,22 @@ export const AdminCouponsPage: React.FC = () => {
   });
 
   useEffect(() => {
-    loadCoupons();
+    let ignore = false;
+    (async () => {
+      try {
+        const data = await adminService.getCoupons();
+        if (ignore) return;
+        setCoupons(data);
+      } catch {
+        // ignore
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
   }, []);
-
-  const loadCoupons = async () => {
-    setIsLoading(true);
-    const data = await adminService.getCoupons();
-    setCoupons(data);
-    setIsLoading(false);
-  };
 
   const handleToggleActive = async (coupon: Coupon) => {
     try {

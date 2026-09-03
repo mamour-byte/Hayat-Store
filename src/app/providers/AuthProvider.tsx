@@ -1,20 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import type { User, LoginCredentials, RegisterPayload, AuthResponse } from '../../types';
 import { apiClient } from '../../lib/api/client';
 import { API_ENDPOINTS } from '../../lib/api/endpoints';
 import { tokenStorage } from '../../lib/storage/token.storage';
-
-interface AuthContextValue {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext, type AuthContextValue } from './auth-context';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -98,17 +88,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
+  const contextValue = useMemo<AuthContextValue>(
+    () => ({ user, isAuthenticated, isLoading, login, register, logout }),
+    [user, isAuthenticated, isLoading, login, register, logout]
+  );
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = (): AuthContextValue => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

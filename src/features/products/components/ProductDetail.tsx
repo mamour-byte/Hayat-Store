@@ -9,8 +9,8 @@ import { ReviewForm } from '../../reviews/components/ReviewForm';
 import { Button } from '../../../components/ui/Button';
 import { Spinner } from '../../../components/ui/Spinner';
 import { formatPrice } from '../../../lib/utils/currency';
-import { useCart } from '../../../app/providers/CartProvider';
-import { useAuth } from '../../../app/providers/AuthProvider';
+import { useCart } from '../../../app/providers/cart-context';
+import { useAuth } from '../../../app/providers/auth-context';
 
 export const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -89,6 +89,10 @@ export const ProductDetail: React.FC = () => {
               <img
                 src={product.images[activeImage].url}
                 alt={product.images[activeImage].alt ?? product.name}
+                loading="lazy"
+                decoding="async"
+                width={520}
+                height={520}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -109,7 +113,7 @@ export const ProductDetail: React.FC = () => {
                       : 'border-[#e1e3e5] opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  <img src={img.url} alt="" loading="lazy" decoding="async" width={64} height={64} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

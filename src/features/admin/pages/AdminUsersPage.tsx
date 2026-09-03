@@ -11,20 +11,22 @@ export const AdminUsersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    loadUsers();
+    let ignore = false;
+    (async () => {
+      try {
+        const data = await adminService.getUsers();
+        if (ignore) return;
+        setUsers(data);
+      } catch {
+        if (!ignore) toast.error('Erreur lors du chargement des utilisateurs');
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
   }, []);
-
-  const loadUsers = async () => {
-    setIsLoading(true);
-    try {
-      const data = await adminService.getUsers();
-      setUsers(data);
-    } catch {
-      toast.error('Erreur lors du chargement des utilisateurs');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
@@ -165,7 +167,7 @@ export const AdminUsersPage: React.FC = () => {
                     <td className="py-3.5 px-4 text-[#6d7175] whitespace-nowrap">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {new Date(usr.createdAt || Date.now()).toLocaleDateString('fr-FR')}
+                        {usr.createdAt ? new Date(usr.createdAt).toLocaleDateString('fr-FR') : '—'}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">

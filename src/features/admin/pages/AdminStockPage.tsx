@@ -10,6 +10,45 @@ type StockFilter = 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 
 const LOW_STOCK_THRESHOLD = 5;
 
+const getProductStock = (product: Product, variant?: ProductVariant) => {
+  if (product.hasVariants && product.variants && product.variants.length > 0) {
+    if (variant) return Number(variant.quantity) || 0;
+    return product.variants.reduce((acc, v) => acc + (Number(v.quantity) || 0), 0);
+  }
+  return Number(product.quantity) || 0;
+};
+
+const stockStatus = (product: Product, variant?: ProductVariant) => {
+  const stock = getProductStock(product, variant);
+  if (stock === 0) return 'OUT_OF_STOCK';
+  if (stock <= LOW_STOCK_THRESHOLD) return 'LOW_STOCK';
+  return 'IN_STOCK';
+};
+
+const StockBadge = ({ product, variant }: { product: Product; variant?: ProductVariant }) => {
+  const status = stockStatus(product, variant);
+  const stock = getProductStock(product, variant);
+  if (status === 'OUT_OF_STOCK') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">
+        <PackageX className="w-3 h-3" /> Épuisé
+      </span>
+    );
+  }
+  if (status === 'LOW_STOCK') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+        <AlertTriangle className="w-3 h-3" /> {stock} restant(s)
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f0f9f6] text-[#008060] border border-[#008060]/20">
+      <CheckCircle2 className="w-3 h-3" /> {stock} en stock
+    </span>
+  );
+};
+
 export const AdminStockPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,21 +74,6 @@ export const AdminStockPage: React.FC = () => {
     }
   };
 
-  const getProductStock = (product: Product, variant?: ProductVariant) => {
-    if (product.hasVariants && product.variants && product.variants.length > 0) {
-      if (variant) return Number(variant.quantity) || 0;
-      return product.variants.reduce((acc, v) => acc + (Number(v.quantity) || 0), 0);
-    }
-    return Number(product.quantity) || 0;
-  };
-
-  const stockStatus = (product: Product, variant?: ProductVariant) => {
-    const stock = getProductStock(product, variant);
-    if (stock === 0) return 'OUT_OF_STOCK';
-    if (stock <= LOW_STOCK_THRESHOLD) return 'LOW_STOCK';
-    return 'IN_STOCK';
-  };
-
   const summary = useMemo(() => {
     let total = 0;
     let inStock = 0;
@@ -63,7 +87,6 @@ export const AdminStockPage: React.FC = () => {
       else inStock++;
     }
     return { total, inStock, lowStock, outOfStock };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products]);
 
   useEffect(() => {
@@ -123,30 +146,6 @@ export const AdminStockPage: React.FC = () => {
     { id: 'LOW_STOCK', label: 'Stock faible', count: summary.lowStock },
     { id: 'OUT_OF_STOCK', label: 'Rupture', count: summary.outOfStock },
   ];
-
-  const StockBadge = ({ product, variant }: { product: Product; variant?: ProductVariant }) => {
-    const status = stockStatus(product, variant);
-    const stock = getProductStock(product, variant);
-    if (status === 'OUT_OF_STOCK') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">
-          <PackageX className="w-3 h-3" /> Épuisé
-        </span>
-      );
-    }
-    if (status === 'LOW_STOCK') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-          <AlertTriangle className="w-3 h-3" /> {stock} restant(s)
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f0f9f6] text-[#008060] border border-[#008060]/20">
-        <CheckCircle2 className="w-3 h-3" /> {stock} en stock
-      </span>
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -288,7 +287,7 @@ export const AdminStockPage: React.FC = () => {
                             <div className="flex items-center gap-3">
                               <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#f6f6f7] border border-[#e1e3e5] shrink-0">
                                 {prod.images?.[0]?.url ? (
-                                  <img src={prod.images[0].url} alt={prod.name} className="w-full h-full object-cover" />
+                                  <img src={prod.images[0].url} alt={prod.name} loading="lazy" decoding="async" width={48} height={48} className="w-full h-full object-cover" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-[#6d7175]">
                                     <Package className="w-5 h-5 opacity-40" />
@@ -369,6 +368,10 @@ export const AdminStockPage: React.FC = () => {
                     <img
                       src={restockTarget.product.images[0].url}
                       alt={restockTarget.product.name}
+                      loading="lazy"
+                      decoding="async"
+                      width={44}
+                      height={44}
                       className="w-full h-full object-cover"
                     />
                   ) : (

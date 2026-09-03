@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { io, type Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { notificationsService } from '../api/notifications.service';
 import type { AdminNotification } from '../../../types';
 import { tokenStorage } from '../../../lib/storage/token.storage';
@@ -71,19 +71,9 @@ export const useAdminOrderNotifications = () => {
     }, REFRESH_INTERVAL);
 
     const token = tokenStorage.getAccessToken();
-    const apiUrl = import.meta.env.VITE_API_URL || '/api';
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
     const socketUrl = import.meta.env.VITE_SOCKET_URL || apiUrl.replace(/\/api\/?$/, '');
     const socketPath = import.meta.env.VITE_SOCKET_PATH || '/socket.io';
-    const socket = io(socketUrl, {
-      path: socketPath,
-      transports: ['websocket'],
-      auth: token ? { token } : undefined,
-    });
-    socketRef.current = socket;
-
-    socket.on('connect_error', (error) => {
-      console.error('[notifications] Socket.IO connection failed:', error.message);
-    });
 
     const handleNotification = (payload: NotificationPayload) => {
       const candidate = 'notification' in payload && payload.notification
@@ -93,22 +83,44 @@ export const useAdminOrderNotifications = () => {
           : payload.data;
       if (!candidate || !('id' in candidate)) return;
       const notification = candidate;
-      if (isCancelled || (notification.type && notification.type !== 'ORDER_CREATED') || !notification.id) return;
+      if (isCancelled || (notification.type && notification.type !== 'NEW_ORDER') || !notification.id) return;
       setNotifications((current) => [notification, ...current.filter((item) => item.id !== notification.id)].slice(0, MAX_NOTIFICATIONS));
       setUnreadCount((current) => current + 1);
       playNotificationSound();
     };
 
-    socket.onAny((_event, payload: NotificationPayload) => {
-      if (payload && typeof payload === 'object') handleNotification(payload);
-    });
+    let socket: Socket | null = null;
+
+    import('socket.io-client')
+      .then(({ io }) => {
+        if (isCancelled) return;
+        socket = io(socketUrl, {
+          path: socketPath,
+          transports: ['websocket'],
+          auth: token ? { token } : undefined,
+        });
+        socketRef.current = socket;
+
+        socket.on('connect_error', (error) => {
+          console.error('[notifications] Socket.IO connection failed:', error.message);
+        });
+
+        socket.onAny((_event, payload: NotificationPayload) => {
+          if (payload && typeof payload === 'object') handleNotification(payload);
+        });
+      })
+      .catch((error) => {
+        console.error('[notifications] Socket.IO failed to load:', error);
+      });
 
     return () => {
       isCancelled = true;
       window.clearInterval(refreshTimer);
       window.removeEventListener('admin-notification-interaction', handleAdminInteraction);
-      socket.removeAllListeners();
-      socket.disconnect();
+      if (socket) {
+        socket.removeAllListeners();
+        socket.disconnect();
+      }
       socketRef.current = null;
     };
   }, []);

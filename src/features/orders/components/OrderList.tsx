@@ -9,6 +9,40 @@ import { formatPrice } from '../../../lib/utils/currency';
 import { formatDate, getOrderStatusBadge, getPaymentStatusBadge } from '../../../lib/utils/formatters';
 import type { Order } from '../../../types';
 
+interface OrderRowProps {
+  order: Order;
+  onSelect: (order: Order) => void;
+}
+
+const OrderRow = React.memo(function OrderRow({ order, onSelect }: OrderRowProps) {
+  const statusBadge = getOrderStatusBadge(order.status);
+  const paymentBadge = getPaymentStatusBadge(order.paymentStatus);
+  return (
+    <button
+      onClick={() => onSelect(order)}
+      className="w-full bg-white border border-[#e1e3e5] rounded-2xl p-5 hover:shadow-md hover:border-[#008060]/40 transition-all duration-200 text-left cursor-pointer"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1.5">
+          <p className="font-mono font-bold text-[#1a1a1a] text-sm">
+            {order.orderNumber}
+          </p>
+          <p className="text-xs text-[#6d7175]">
+            {formatDate(order.createdAt)}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
+            <Badge className={paymentBadge.className}>{paymentBadge.label}</Badge>
+          </div>
+        </div>
+        <span className="font-bold text-[#1a1a1a] whitespace-nowrap">
+          {formatPrice(order.total)}
+        </span>
+      </div>
+    </button>
+  );
+});
+
 export const OrderList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -37,35 +71,9 @@ export const OrderList: React.FC = () => {
   return (
     <>
       <div className="space-y-3">
-        {data.data.map((order) => {
-          const statusBadge = getOrderStatusBadge(order.status);
-          const paymentBadge = getPaymentStatusBadge(order.paymentStatus);
-          return (
-            <button
-              key={order.id}
-              onClick={() => setSelectedOrder(order)}
-              className="w-full bg-white border border-[#e1e3e5] rounded-2xl p-5 hover:shadow-md hover:border-[#008060]/40 transition-all duration-200 text-left cursor-pointer"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1.5">
-                  <p className="font-mono font-bold text-[#1a1a1a] text-sm">
-                    {order.orderNumber}
-                  </p>
-                  <p className="text-xs text-[#6d7175]">
-                    {formatDate(order.createdAt)}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
-                    <Badge className={paymentBadge.className}>{paymentBadge.label}</Badge>
-                  </div>
-                </div>
-                <span className="font-bold text-[#1a1a1a] whitespace-nowrap">
-                  {formatPrice(order.total)}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+        {data.data.map((order) => (
+          <OrderRow key={order.id} order={order} onSelect={setSelectedOrder} />
+        ))}
       </div>
 
       {/* Pagination */}

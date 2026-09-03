@@ -1,15 +1,15 @@
-import type { InternalAxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
+import type { InternalAxiosRequestConfig, AxiosError, AxiosResponse, AxiosInstance } from 'axios';
 import { tokenStorage } from '../storage/token.storage';
 import { toast } from 'sonner';
 
-export const setupInterceptors = (axiosInstance: any) => {
+export const setupInterceptors = (axiosInstance: AxiosInstance) => {
   let isRefreshing = false;
   let failedQueue: Array<{
     resolve: (token: string) => void;
-    reject: (error: any) => void;
+    reject: (error: unknown) => void;
   }> = [];
 
-  const processQueue = (error: any, token: string | null = null) => {
+  const processQueue = (error: unknown, token: string | null = null) => {
     failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);
@@ -43,7 +43,7 @@ export const setupInterceptors = (axiosInstance: any) => {
   axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => response,
     async (error: AxiosError) => {
-      const originalRequest: any = error.config;
+      const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
       if (
         error.response?.status === 401 &&
@@ -104,7 +104,7 @@ export const setupInterceptors = (axiosInstance: any) => {
 
       // Handle general error notifications
       if (error.response?.data) {
-        const data: any = error.response.data;
+        const data = error.response.data as { message?: string | string[] };
         const message = Array.isArray(data.message)
           ? data.message.join(', ')
           : data.message || 'Une erreur est survenue';

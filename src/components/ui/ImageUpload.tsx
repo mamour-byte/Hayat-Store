@@ -143,6 +143,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               <img
                 src={image.url}
                 alt={`Preview ${index + 1}`}
+                loading="lazy"
+                decoding="async"
+                width={256}
+                height={256}
                 className="w-full h-full object-cover"
               />
               {image.isPrimary && (

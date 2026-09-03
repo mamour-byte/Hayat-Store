@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, Tag, ShieldCheck, Truck, Check } from 'lucide-react';
 import { formatPrice } from '../../../lib/utils/currency';
-import { useCart } from '../../../app/providers/CartProvider';
+import { useCart } from '../../../app/providers/cart-context';
 import { Button } from '../../../components/ui/Button';
 import { toast } from 'sonner';
 
@@ -10,7 +10,7 @@ interface CartSummaryProps {
   onCheckout?: () => void;
 }
 
-export const CartSummary: React.FC<CartSummaryProps> = ({ onCheckout }) => {
+export const CartSummary: React.FC<CartSummaryProps> = React.memo(function CartSummary({ onCheckout }) {
   const { subtotal, itemCount } = useCart();
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
@@ -158,5 +158,5 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ onCheckout }) => {
       </div>
     </div>
   );
-};
+});
 

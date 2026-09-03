@@ -4,6 +4,7 @@ import type {
   Category,
   Brand,
   PaginatedResponse,
+  ApiMeta,
 } from '../../../types';
 import { apiClient } from '../../../lib/api/client';
 import { API_ENDPOINTS } from '../../../lib/api/endpoints';
@@ -15,7 +16,7 @@ export const productsService = {
     });
 
     let products: Product[];
-    let meta: any;
+    let meta: ApiMeta;
 
     if (Array.isArray(data)) {
       products = data;

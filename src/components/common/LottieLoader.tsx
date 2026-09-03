@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Lottie } from 'lottie-react';
 
 type LottieAnimation = Record<string, unknown>;
 
@@ -8,8 +7,16 @@ interface LottieLoaderProps {
   className?: string;
 }
 
+type LottieComponent = React.ComponentType<{
+  src: LottieAnimation;
+  loop?: boolean;
+  autoplay?: boolean;
+  style?: React.CSSProperties;
+}>;
+
 export const LottieLoader: React.FC<LottieLoaderProps> = ({ size = 192, className = '' }) => {
   const [animationData, setAnimationData] = useState<LottieAnimation | null>(null);
+  const [LottieComp, setLottieComp] = useState<LottieComponent | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -17,7 +24,7 @@ export const LottieLoader: React.FC<LottieLoaderProps> = ({ size = 192, classNam
     fetch('/assets/shooping.json')
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Impossible de charger l’animation de chargement');
+          throw new Error('Impossible de charger l animation de chargement');
         }
         return response.json() as Promise<LottieAnimation>;
       })
@@ -37,13 +44,28 @@ export const LottieLoader: React.FC<LottieLoaderProps> = ({ size = 192, classNam
     };
   }, []);
 
-  if (!animationData) {
+  useEffect(() => {
+    if (!animationData || LottieComp) {
+      return;
+    }
+    let cancelled = false;
+    import('lottie-react').then((mod) => {
+      if (!cancelled) {
+        setLottieComp(() => mod.Lottie);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [animationData, LottieComp]);
+
+  if (!animationData || !LottieComp) {
     return null;
   }
 
   return (
     <div role="status" aria-label="Chargement" className={className}>
-      <Lottie
+      <LottieComp
         src={animationData}
         loop
         autoplay

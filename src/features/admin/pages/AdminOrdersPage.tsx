@@ -1,44 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Search, Filter, ShoppingBag, Eye, X, CheckCircle, Clock } from 'lucide-react';
 import { adminService } from '../services/admin.service';
+import { useAdminOrders, useInvalidateAdminQueries } from '../hooks/useAdminQueries';
 import type { Order } from '../../../types';
 import { OrderStatus, PaymentStatus, PaymentProvider } from '../../../types/enums';
 import { formatPrice } from '../../../lib/utils/currency';
 import { toast } from 'sonner';
 
 export const AdminOrdersPage: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadOrders();
-  }, [selectedStatusFilter]);
-
-  const loadOrders = async () => {
-    setIsLoading(true);
-    try {
-      const data = await adminService.getOrders(selectedStatusFilter);
-      setOrders(data);
-    } catch {
-      toast.error('Erreur lors du chargement des commandes');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { invalidateOrders } = useInvalidateAdminQueries();
+  const { data: orders = [], isLoading } = useAdminOrders(selectedStatusFilter);
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     setUpdatingStatus(orderId);
     try {
       const updated = await adminService.updateOrderStatus(orderId, newStatus);
-      setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(updated);
       }
+      await invalidateOrders();
       toast.success(`Statut de la commande mis à jour : ${newStatus}`);
     } catch {
       toast.error('Échec de la mise à jour du statut commande');
@@ -51,10 +36,10 @@ export const AdminOrdersPage: React.FC = () => {
     setUpdatingStatus(orderId);
     try {
       const updated = await adminService.updatePaymentStatus(orderId, newPaymentStatus);
-      setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(updated);
       }
+      await invalidateOrders();
       toast.success(`Statut de paiement mis à jour : ${newPaymentStatus}`);
     } catch {
       toast.error('Échec de la mise à jour du statut paiement');

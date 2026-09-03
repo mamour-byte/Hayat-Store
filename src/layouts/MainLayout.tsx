@@ -10,8 +10,8 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { useAuth } from '../app/providers/AuthProvider';
-import { useCart } from '../app/providers/CartProvider';
+import { useAuth } from '../app/providers/auth-context';
+import { useCart } from '../app/providers/cart-context';
 import { CartDrawer } from '../features/cart/components/CartDrawer';
 import { Input } from '../components/ui/Input';
 

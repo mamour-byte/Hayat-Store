@@ -24,6 +24,56 @@ type Tab = 'OVERVIEW' | 'MOVEMENTS';
 
 const LOW_STOCK_THRESHOLD = 5;
 
+const stockStateOf = (row: InventoryProductRow, variant?: NonNullable<InventoryProductRow['variants']>[number]) => {
+  if (variant) return variant.stockState;
+  if (row.hasVariants && row.variants && row.variants.length > 0) {
+    const allNotTracked = row.variants.every((v) => v.stockState === 'NOT_TRACKED');
+    if (allNotTracked) return 'NOT_TRACKED';
+    const allOut = row.variants.every((v) => v.stockState !== 'NOT_TRACKED' && v.quantity <= 0);
+    if (allOut) return 'OUT_OF_STOCK';
+  }
+  return row.stockState;
+};
+
+const quantityOf = (row: InventoryProductRow, variant?: NonNullable<InventoryProductRow['variants']>[number]) => {
+  if (variant) return variant.quantity;
+  if (row.hasVariants && row.variants && row.variants.length > 0) {
+    return row.variants.reduce((acc, v) => acc + (v.trackInventory ? v.quantity : 0), 0);
+  }
+  return row.quantity;
+};
+
+const StockBadge = ({ row, variant }: { row: InventoryProductRow; variant?: NonNullable<InventoryProductRow['variants']>[number] }) => {
+  const state = stockStateOf(row, variant);
+  const qty = quantityOf(row, variant);
+  if (state === 'NOT_TRACKED') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
+        Non suivi
+      </span>
+    );
+  }
+  if (state === 'OUT_OF_STOCK') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">
+        <PackageX className="w-3 h-3" /> Épuisé
+      </span>
+    );
+  }
+  if (qty <= LOW_STOCK_THRESHOLD) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+        <AlertTriangle className="w-3 h-3" /> {qty} restant(s)
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f0f9f6] text-[#008060] border border-[#008060]/20">
+      <CheckCircle2 className="w-3 h-3" /> {qty} en stock
+    </span>
+  );
+};
+
 const MOVEMENT_LABELS: Record<InventoryMovementType, string> = {
   PURCHASE: 'Achat / Entrée',
   SALE: 'Vente / Sortie',
@@ -110,26 +160,6 @@ export const AdminInventoryPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, typeFilter]);
 
-  const stockStateOf = (row: InventoryProductRow, variant?: NonNullable<InventoryProductRow['variants']>[number]) => {
-    if (variant) return variant.stockState;
-    // For variant products, rollup to the parent state from variants
-    if (row.hasVariants && row.variants && row.variants.length > 0) {
-      const allNotTracked = row.variants.every((v) => v.stockState === 'NOT_TRACKED');
-      if (allNotTracked) return 'NOT_TRACKED';
-      const allOut = row.variants.every((v) => v.stockState !== 'NOT_TRACKED' && v.quantity <= 0);
-      if (allOut) return 'OUT_OF_STOCK';
-    }
-    return row.stockState;
-  };
-
-  const quantityOf = (row: InventoryProductRow, variant?: NonNullable<InventoryProductRow['variants']>[number]) => {
-    if (variant) return variant.quantity;
-    if (row.hasVariants && row.variants && row.variants.length > 0) {
-      return row.variants.reduce((acc, v) => acc + (v.trackInventory ? v.quantity : 0), 0);
-    }
-    return row.quantity;
-  };
-
   const summary = useMemo(() => {
     const s = { total: 0, inStock: 0, lowStock: 0, outOfStock: 0, notTracked: 0 };
     for (const row of rows) {
@@ -202,37 +232,6 @@ export const AdminInventoryPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const StockBadge = ({ row, variant }: { row: InventoryProductRow; variant?: NonNullable<InventoryProductRow['variants']>[number] }) => {
-    const state = stockStateOf(row, variant);
-    const qty = quantityOf(row, variant);
-    if (state === 'NOT_TRACKED') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
-          Non suivi
-        </span>
-      );
-    }
-    if (state === 'OUT_OF_STOCK') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">
-          <PackageX className="w-3 h-3" /> Épuisé
-        </span>
-      );
-    }
-    if (qty <= LOW_STOCK_THRESHOLD) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-          <AlertTriangle className="w-3 h-3" /> {qty} restant(s)
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f0f9f6] text-[#008060] border border-[#008060]/20">
-        <CheckCircle2 className="w-3 h-3" /> {qty} en stock
-      </span>
-    );
   };
 
   const stateFilters: { id: string; label: string; count: number }[] = [

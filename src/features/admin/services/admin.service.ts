@@ -63,7 +63,7 @@ export interface AdminCouponPayload {
 export type AdminShippingZonePayload = ShippingZonePayload;
 
 // Resilient Mock Data Store
-let mockOrdersList: Order[] = [
+const mockOrdersList: Order[] = [
   {
     id: 'ord-101',
     orderNumber: 'ORD-98241',
@@ -256,7 +256,7 @@ let mockCategoriesList: Category[] = [
   },
 ];
 
-let mockProductsList: Product[] = [
+const mockProductsList: Product[] = [
   {
     id: 'prod-1',
     name: 'Parfum Musc Imperial 100ml',
@@ -381,7 +381,7 @@ let mockCouponsList: Coupon[] = [
   },
 ];
 
-let mockUsersList: User[] = [
+const mockUsersList: User[] = [
   {
     id: 'usr-1',
     email: 'admin@hayatstore.sn',
@@ -715,7 +715,7 @@ export const adminService = {
       alt: payload.name, // Use product name as alt text
     }));
 
-    const apiPayload: any = {
+    const apiPayload = {
       name: payload.name,
       slug: slug || `product-${Date.now()}`,
       price: Number(payload.price),
@@ -745,14 +745,15 @@ export const adminService = {
       }
 
       return pendingImages.length > 0 ? await adminService.getProductById(data.id) : data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Product creation failed:', err);
       // If server responded with an error message, propagate it to UI
-      if (err?.response?.data) {
-        const msg = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : err.response.data.message || err.response.data.error;
-        if (msg) throw new Error(msg);
+      const apiErr = err as { response?: { data?: { message?: string | string[]; error?: string } } };
+      if (apiErr?.response?.data) {
+        const msg = Array.isArray(apiErr.response.data.message)
+          ? apiErr.response.data.message.join(', ')
+          : apiErr.response.data.message || apiErr.response.data.error;
+        if (msg) throw new Error(msg, { cause: err });
       }
       // If server is not reachable at all, fallback to mock store with console warning
       console.warn('Backend API unavailable, saving to transient mock store');
@@ -795,7 +796,7 @@ export const adminService = {
   },
 
   updateProduct: async (productId: string, payload: Partial<AdminProductPayload>): Promise<Product> => {
-    const apiPayload: any = { ...payload };
+    const apiPayload = { ...payload };
     if (payload.name && !payload.slug) {
       apiPayload.slug = payload.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     }
@@ -830,12 +831,13 @@ export const adminService = {
         await adminService.uploadProductImage(productId, image.file!, payload.name);
       }
       return pendingImages.length > 0 ? await adminService.getProductById(productId) : data;
-    } catch (err: any) {
-      if (err?.response?.data) {
-        const msg = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : err.response.data.message || err.response.data.error;
-        if (msg) throw new Error(msg);
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string | string[]; error?: string } } };
+      if (apiErr?.response?.data) {
+        const msg = Array.isArray(apiErr.response.data.message)
+          ? apiErr.response.data.message.join(', ')
+          : apiErr.response.data.message || apiErr.response.data.error;
+        if (msg) throw new Error(msg, { cause: err });
       }
       const idx = mockProductsList.findIndex((p) => p.id === productId);
       if (idx !== -1) {
@@ -866,7 +868,7 @@ export const adminService = {
         };
         return mockProductsList[idx];
       }
-      throw new Error('Product not found');
+      throw new Error('Product not found', { cause: err });
     }
   },
 
@@ -898,14 +900,15 @@ export const adminService = {
       // Update mock list to reflect archived status
       const idx = mockProductsList.findIndex((p) => p.id === productId);
       if (idx !== -1) {
-        mockProductsList[idx] = { ...mockProductsList[idx], status: 'ARCHIVED' as any };
+        mockProductsList[idx] = { ...mockProductsList[idx], status: ProductStatus.ARCHIVED };
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to archive product from backend:', err);
-      console.error('Error response:', err?.response?.data);
-      console.error('Error status:', err?.response?.status);
-      const errorMessage = err?.response?.data?.message || err?.message || 'Erreur lors de l\'archivage du produit';
-      throw new Error(errorMessage);
+      const apiErr = err as { response?: { data?: { message?: string; status?: number }; status?: number }; message?: string };
+      console.error('Error response:', apiErr?.response?.data);
+      console.error('Error status:', apiErr?.response?.status);
+      const errorMessage = apiErr?.response?.data?.message || apiErr?.message || 'Erreur lors de l\'archivage du produit';
+      throw new Error(errorMessage, { cause: err });
     }
   },
 
@@ -936,30 +939,31 @@ export const adminService = {
       }
       
       return data;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const httpErr = err as { response?: { status?: number; statusText?: string; data?: { message?: string } }; message?: string };
       console.error('Backend upload-image endpoint failed:', err);
       console.error('Error details:', {
-        status: err?.response?.status,
-        statusText: err?.response?.statusText,
-        data: err?.response?.data,
-        message: err?.message,
+        status: httpErr?.response?.status,
+        statusText: httpErr?.response?.statusText,
+        data: httpErr?.response?.data,
+        message: httpErr?.message,
       });
       
       let errorMessage = 'Erreur lors du téléversement';
       
-      if (err?.response?.status === 413) {
+      if (httpErr?.response?.status === 413) {
         errorMessage = 'Fichier trop volumineux (max 10MB)';
-      } else if (err?.response?.status === 415) {
+      } else if (httpErr?.response?.status === 415) {
         errorMessage = 'Format de fichier non supporté';
-      } else if (err?.response?.status === 500) {
+      } else if (httpErr?.response?.status === 500) {
         errorMessage = 'Erreur serveur Cloudinary - Réessayez';
-      } else if (err?.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err?.message) {
-        errorMessage = err.message;
+      } else if (httpErr?.response?.data?.message) {
+        errorMessage = httpErr.response.data.message;
+      } else if (httpErr?.message) {
+        errorMessage = httpErr.message;
       }
       
-      throw new Error(errorMessage);
+      throw new Error(errorMessage, { cause: err });
     }
   },
 
@@ -980,7 +984,7 @@ export const adminService = {
         },
       );
       return data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn('Backend product image upload failed, storing in mock', err);
       const newImg: ProductImage = {
         id: `img-${Date.now()}`,
@@ -1025,10 +1029,11 @@ export const adminService = {
   deleteProductImage: async (productId: string, imageId: string): Promise<void> => {
     try {
       await apiClient.delete(API_ENDPOINTS.PRODUCTS.IMAGE_DELETE(productId, imageId));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete image from backend:', err);
-      const errorMessage = err?.response?.data?.message || err?.message || 'Erreur lors de la suppression de l\'image';
-      throw new Error(errorMessage);
+      const apiErr = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = apiErr?.response?.data?.message || apiErr?.message || 'Erreur lors de la suppression de l\'image';
+      throw new Error(errorMessage, { cause: err });
     } finally {
       const prod = mockProductsList.find((p) => p.id === productId);
       if (prod && prod.images) {
@@ -1079,15 +1084,16 @@ export const adminService = {
       );
       console.log('Variant created successfully:', data);
       return data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create variant:', err);
-      if (err?.response?.data) {
-        const msg = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : err.response.data.message || err.response.data.error;
-        if (msg) throw new Error(msg);
+      const apiErr = err as { response?: { data?: { message?: string | string[]; error?: string } } };
+      if (apiErr?.response?.data) {
+        const msg = Array.isArray(apiErr.response.data.message)
+          ? apiErr.response.data.message.join(', ')
+          : apiErr.response.data.message || apiErr.response.data.error;
+        if (msg) throw new Error(msg, { cause: err });
       }
-      throw new Error('Erreur lors de la création de la variante');
+      throw new Error('Erreur lors de la création de la variante', { cause: err });
     }
   },
 
@@ -1099,18 +1105,23 @@ export const adminService = {
     variantId: string,
     payload: Partial<ProductVariant>,
   ): Promise<ProductVariant> => {
+    const variantPayload = { ...payload };
+    if (variantPayload.price !== undefined) variantPayload.price = Number(variantPayload.price);
+    if (variantPayload.quantity !== undefined) variantPayload.quantity = Number(variantPayload.quantity);
+
     try {
       const { data } = await apiClient.patch<ProductVariant>(
         API_ENDPOINTS.PRODUCTS.VARIANT(productId, variantId),
-        payload,
+        variantPayload,
       );
       return data;
-    } catch (err: any) {
-      if (err?.response?.data) {
-        const msg = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : err.response.data.message || err.response.data.error;
-        if (msg) throw new Error(msg);
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string | string[]; error?: string } } };
+      if (apiErr?.response?.data) {
+        const msg = Array.isArray(apiErr.response.data.message)
+          ? apiErr.response.data.message.join(', ')
+          : apiErr.response.data.message || apiErr.response.data.error;
+        if (msg) throw new Error(msg, { cause: err });
       }
       const prod = mockProductsList.find((p) => p.id === productId);
       if (prod && prod.variants) {
@@ -1125,7 +1136,7 @@ export const adminService = {
           return prod.variants[idx];
         }
       }
-      throw new Error('Variante introuvable');
+      throw new Error('Variante introuvable', { cause: err });
     }
   },
 
@@ -1258,36 +1269,38 @@ export const adminService = {
   /**
    * POST /inventory/adjust — ajustement manuel du stock (fixe le stock, avec raison)
    */
-  adjustInventory: async (payload: { productId: string; variantId?: string; newQuantity: number; reason: string }): Promise<any> => {
+  adjustInventory: async (payload: { productId: string; variantId?: string; newQuantity: number; reason: string }): Promise<unknown> => {
     try {
       const { data } = await apiClient.post(API_ENDPOINTS.INVENTORY.ADJUST, payload);
       return data;
-    } catch (err: any) {
-      if (err?.response?.data) {
-        const msg = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : err.response.data.message || err.response.data.error;
-        if (msg) throw new Error(msg);
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string | string[]; error?: string } } };
+      if (apiErr?.response?.data) {
+        const msg = Array.isArray(apiErr.response.data.message)
+          ? apiErr.response.data.message.join(', ')
+          : apiErr.response.data.message || apiErr.response.data.error;
+        if (msg) throw new Error(msg, { cause: err });
       }
-      throw new Error('Erreur lors de l\'ajustement du stock');
+      throw new Error('Erreur lors de l\'ajustement du stock', { cause: err });
     }
   },
 
   /**
    * POST /inventory/receive — réception fournisseur (incrément du stock)
    */
-  receiveInventory: async (payload: { productId: string; variantId?: string; quantity: number; reason?: string }): Promise<any> => {
+  receiveInventory: async (payload: { productId: string; variantId?: string; quantity: number; reason?: string }): Promise<unknown> => {
     try {
       const { data } = await apiClient.post(API_ENDPOINTS.INVENTORY.RECEIVE, payload);
       return data;
-    } catch (err: any) {
-      if (err?.response?.data) {
-        const msg = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : err.response.data.message || err.response.data.error;
-        if (msg) throw new Error(msg);
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string | string[]; error?: string } } };
+      if (apiErr?.response?.data) {
+        const msg = Array.isArray(apiErr.response.data.message)
+          ? apiErr.response.data.message.join(', ')
+          : apiErr.response.data.message || apiErr.response.data.error;
+        if (msg) throw new Error(msg, { cause: err });
       }
-      throw new Error('Erreur lors de la réception du stock');
+      throw new Error('Erreur lors de la réception du stock', { cause: err });
     }
   },
 
@@ -1440,12 +1453,13 @@ export const adminService = {
     try {
       const { data } = await apiClient.post<Category>(API_ENDPOINTS.CATEGORIES.CREATE, apiPayload);
       return data;
-    } catch (err: any) {
-      if (err?.response?.data) {
-        const msg = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : err.response.data.message || err.response.data.error;
-        if (msg) throw new Error(msg);
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string | string[]; error?: string } } };
+      if (apiErr?.response?.data) {
+        const msg = Array.isArray(apiErr.response.data.message)
+          ? apiErr.response.data.message.join(', ')
+          : apiErr.response.data.message || apiErr.response.data.error;
+        if (msg) throw new Error(msg, { cause: err });
       }
       const newCat: Category = {
         id: `cat-${Date.now()}`,
@@ -1462,7 +1476,7 @@ export const adminService = {
   },
 
   updateCategory: async (categoryId: string, payload: Partial<AdminCategoryPayload>): Promise<Category> => {
-    const apiPayload: any = { ...payload };
+    const apiPayload = { ...payload };
     if (payload.name && !payload.slug) {
       apiPayload.slug = payload.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     }
@@ -1471,12 +1485,13 @@ export const adminService = {
     try {
       const { data } = await apiClient.patch<Category>(API_ENDPOINTS.CATEGORIES.UPDATE(categoryId), apiPayload);
       return data;
-    } catch (err: any) {
-      if (err?.response?.data) {
-        const msg = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : err.response.data.message || err.response.data.error;
-        if (msg) throw new Error(msg);
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string | string[]; error?: string } } };
+      if (apiErr?.response?.data) {
+        const msg = Array.isArray(apiErr.response.data.message)
+          ? apiErr.response.data.message.join(', ')
+          : apiErr.response.data.message || apiErr.response.data.error;
+        if (msg) throw new Error(msg, { cause: err });
       }
       const idx = mockCategoriesList.findIndex((c) => c.id === categoryId);
       if (idx !== -1) {
@@ -1486,7 +1501,7 @@ export const adminService = {
         };
         return mockCategoriesList[idx];
       }
-      throw new Error('Category not found');
+      throw new Error('Category not found', { cause: err });
     }
   },
 

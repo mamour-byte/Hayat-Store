@@ -39,7 +39,7 @@ const sliderItems: SlideItem[] = [
 
 export const HomePage: React.FC = () => {
   const { data: categories } = useCategories();
-  const { data: featuredProducts, isLoading } = useProducts({ limit: 8, status: 'ACTIVE' as any });
+  const { data: featuredProducts, isLoading } = useProducts({ limit: 8, status: 'ACTIVE' });
   const categoryList = Array.isArray(categories) ? categories : [];
 
   return (

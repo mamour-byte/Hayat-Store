@@ -1,6 +1,6 @@
 import React from 'react';
 import { User as UserIcon, Mail, Phone, Shield } from 'lucide-react';
-import { useAuth } from '../../../app/providers/AuthProvider';
+import { useAuth } from '../../../app/providers/auth-context';
 import { Card } from '../../../components/ui/Card';
 
 export const ProfilePage: React.FC = () => {

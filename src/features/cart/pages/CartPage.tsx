@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, ShoppingCart, ArrowRight, Trash2, Truck, Sparkles } from 'lucide-react';
-import { useCart } from '../../../app/providers/CartProvider';
+import { useCart } from '../../../app/providers/cart-context';
 import { CartItemRow } from '../components/CartItemRow';
 import { CartSummary } from '../components/CartSummary';
 import { Button } from '../../../components/ui/Button';

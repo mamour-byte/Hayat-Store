@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { X, ShoppingBag, ShoppingCart, ArrowRight, Truck } from 'lucide-react';
-import { useCart } from '../../../app/providers/CartProvider';
+import { useCart } from '../../../app/providers/cart-context';
 import { CartItemRow } from './CartItemRow';
 import { formatPrice } from '../../../lib/utils/currency';
 
@@ -10,7 +10,7 @@ interface CartDrawerProps {
   onClose: () => void;
 }
 
-export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
+export const CartDrawer: React.FC<CartDrawerProps> = React.memo(function CartDrawer({ isOpen, onClose }) {
   const { cart, itemCount, subtotal } = useCart();
   const cartItems = cart?.items ?? [];
   const FREE_SHIPPING_THRESHOLD = 25000;
@@ -132,5 +132,5 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
       </div>
     </>
   );
-};
+});
 

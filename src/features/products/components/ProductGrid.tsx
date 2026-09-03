@@ -9,7 +9,7 @@ interface ProductGridProps {
   isLoading?: boolean;
 }
 
-export const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading }) => {
+export const ProductGrid: React.FC<ProductGridProps> = React.memo(function ProductGrid({ products, isLoading }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
@@ -41,4 +41,4 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading })
       ))}
     </div>
   );
-};
+});

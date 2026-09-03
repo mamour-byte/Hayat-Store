@@ -33,6 +33,58 @@ type StockFilter = 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'NOT_TRAC
 
 const LOW_STOCK_THRESHOLD = 5;
 
+const getTracksInventory = (product: Product, variant?: ProductVariant) => {
+  if (variant) return variant.trackInventory !== false;
+  return product.trackInventory !== false;
+};
+
+const getProductStock = (product: Product, variant?: ProductVariant) => {
+  if (product.hasVariants && product.variants && product.variants.length > 0) {
+    if (variant) return Number(variant.quantity) || 0;
+    return product.variants.reduce((acc, v) => acc + (Number(v.quantity) || 0), 0);
+  }
+  return Number(product.quantity) || 0;
+};
+
+const stockStatus = (product: Product, variant?: ProductVariant) => {
+  if (!getTracksInventory(product, variant)) return 'NOT_TRACKED';
+  const stock = getProductStock(product, variant);
+  if (stock === 0) return 'OUT_OF_STOCK';
+  if (stock <= LOW_STOCK_THRESHOLD) return 'LOW_STOCK';
+  return 'IN_STOCK';
+};
+
+const RenderStockBadge = ({ product, variant }: { product: Product; variant?: ProductVariant }) => {
+  const status = stockStatus(product, variant);
+  if (status === 'NOT_TRACKED') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+        <ShieldOff className="w-3 h-3" /> Non suivi
+      </span>
+    );
+  }
+  const stock = getProductStock(product, variant);
+  if (status === 'OUT_OF_STOCK') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">
+        <PackageX className="w-3 h-3" /> Épuisé
+      </span>
+    );
+  }
+  if (status === 'LOW_STOCK') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+        <AlertTriangle className="w-3 h-3" /> {stock} restant(s)
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f0f9f6] text-[#008060] border border-[#008060]/20">
+      <CheckCircle2 className="w-3 h-3" /> {stock} en stock
+    </span>
+  );
+};
+
 export const AdminProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -85,24 +137,6 @@ export const AdminProductsPage: React.FC = () => {
   const [restockQuantity, setRestockQuantity] = useState(0);
   const [isRestocking, setIsRestocking] = useState(false);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  useEffect(() => {
-    loadProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
-
-  const loadCategories = async () => {
-    try {
-      const cats = await adminService.getCategories();
-      setCategories(cats);
-    } catch {
-      // Ignore
-    }
-  };
-
   const loadProducts = async () => {
     setIsLoading(true);
     try {
@@ -117,6 +151,44 @@ export const AdminProductsPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const cats = await adminService.getCategories();
+        if (ignore) return;
+        setCategories(cats);
+      } catch {
+        // Ignore
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const data = await adminService.getProducts({
+          search: searchQuery,
+          status: statusFilter !== 'ALL' ? statusFilter : undefined,
+        });
+        if (ignore) return;
+        setProducts(data);
+      } catch {
+        if (!ignore) toast.error('Erreur lors du chargement des produits');
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
 
   const handleOpenCreateModal = () => {
     setEditingProduct(null);
@@ -181,18 +253,18 @@ export const AdminProductsPage: React.FC = () => {
     if (!window.confirm(`Voulez-vous vraiment archiver "${product.name}" ?`)) return;
     try {
       await adminService.deleteProduct(product.id);
-      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, status: 'ARCHIVED' as any } : p)));
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, status: ProductStatus.ARCHIVED } : p)));
       toast.success('Produit archivé avec succès');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Archive product error:', err);
-      const errorMessage = err?.message || 'Erreur lors de l\'archivage';
+      const errorMessage = (err as { message?: string })?.message || 'Erreur lors de l\'archivage';
       toast.error(errorMessage);
     }
   };
 
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || formData.price <= 0) {
+    if (!formData.name || !(formData.price > 0)) {
       toast.error('Veuillez remplir correctement le nom et le prix du produit');
       return;
     }
@@ -240,9 +312,10 @@ export const AdminProductsPage: React.FC = () => {
           for (const variant of formData.variants) {
             try {
               await adminService.createProductVariant(created.id, variant);
-            } catch (err: any) {
+            } catch (err: unknown) {
               console.error('Failed to create variant:', err);
-              toast.error(`Erreur lors de la création de la variante ${variant.name}: ${err.message}`);
+              const errMsg = (err as { message?: string })?.message ?? 'Erreur inconnue';
+              toast.error(`Erreur lors de la création de la variante ${variant.name}: ${errMsg}`);
             }
           }
           // Refresh product to get updated variants and hasVariants flag
@@ -255,8 +328,9 @@ export const AdminProductsPage: React.FC = () => {
         toast.success('Nouveau produit enregistré dans la base de données !');
       }
       setIsAddModalOpen(false);
-    } catch (err: any) {
-      const msg = err?.message || (editingProduct ? 'Échec de la modification' : 'Échec de la création du produit');
+    } catch (err: unknown) {
+      const defaultMsg = editingProduct ? 'Échec de la modification' : 'Échec de la création du produit';
+      const msg = (err as { message?: string })?.message || defaultMsg;
       toast.error(msg);
     } finally {
       setIsSubmitting(false);
@@ -339,28 +413,6 @@ export const AdminProductsPage: React.FC = () => {
     return matchesQuery && matchesStatus;
   });
 
-  // ---- Stock management helpers ----
-  const getTracksInventory = (product: Product, variant?: ProductVariant) => {
-    if (variant) return variant.trackInventory !== false;
-    return product.trackInventory !== false;
-  };
-
-  const getProductStock = (product: Product, variant?: ProductVariant) => {
-    if (product.hasVariants && product.variants && product.variants.length > 0) {
-      if (variant) return Number(variant.quantity) || 0;
-      return product.variants.reduce((acc, v) => acc + (Number(v.quantity) || 0), 0);
-    }
-    return Number(product.quantity) || 0;
-  };
-
-  const stockStatus = (product: Product, variant?: ProductVariant) => {
-    if (!getTracksInventory(product, variant)) return 'NOT_TRACKED';
-    const stock = getProductStock(product, variant);
-    if (stock === 0) return 'OUT_OF_STOCK';
-    if (stock <= LOW_STOCK_THRESHOLD) return 'LOW_STOCK';
-    return 'IN_STOCK';
-  };
-
   const stockSummary = useMemo(() => {
     let total = 0;
     let inStock = 0;
@@ -376,7 +428,6 @@ export const AdminProductsPage: React.FC = () => {
       else inStock++;
     }
     return { total, inStock, lowStock, outOfStock, notTracked };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products]);
 
   const filteredStockProducts = products.filter((p) => {
@@ -424,37 +475,6 @@ export const AdminProductsPage: React.FC = () => {
     } finally {
       setIsRestocking(false);
     }
-  };
-
-  const RenderStockBadge = ({ product, variant }: { product: Product; variant?: ProductVariant }) => {
-    const status = stockStatus(product, variant);
-    if (status === 'NOT_TRACKED') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-          <ShieldOff className="w-3 h-3" /> Non suivi
-        </span>
-      );
-    }
-    const stock = getProductStock(product, variant);
-    if (status === 'OUT_OF_STOCK') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">
-          <PackageX className="w-3 h-3" /> Épuisé
-        </span>
-      );
-    }
-    if (status === 'LOW_STOCK') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-          <AlertTriangle className="w-3 h-3" /> {stock} restant(s)
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f0f9f6] text-[#008060] border border-[#008060]/20">
-        <CheckCircle2 className="w-3 h-3" /> {stock} en stock
-      </span>
-    );
   };
 
   const stockFilters: { id: StockFilter; label: string; count: number }[] = [
@@ -597,7 +617,7 @@ export const AdminProductsPage: React.FC = () => {
                           <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#f6f6f7] border border-[#e1e3e5] shrink-0">
                               {prod.images?.[0]?.url ? (
-                                <img src={prod.images[0].url} alt={prod.name} className="w-full h-full object-cover" />
+                                <img src={prod.images[0].url} alt={prod.name} loading="lazy" decoding="async" width={48} height={48} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[#6d7175]">
                                   <ImageIcon className="w-5 h-5 opacity-40" />
@@ -834,7 +854,7 @@ export const AdminProductsPage: React.FC = () => {
                                   <div className="flex items-center gap-3">
                                     <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#f6f6f7] border border-[#e1e3e5] shrink-0">
                                       {prod.images?.[0]?.url ? (
-                                        <img src={prod.images[0].url} alt={prod.name} className="w-full h-full object-cover" />
+                                        <img src={prod.images[0].url} alt={prod.name} loading="lazy" decoding="async" width={48} height={48} className="w-full h-full object-cover" />
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-[#6d7175]">
                                           <Package className="w-5 h-5 opacity-40" />
@@ -1281,6 +1301,10 @@ export const AdminProductsPage: React.FC = () => {
                     <img
                       src={restockTarget.product.images[0].url}
                       alt={restockTarget.product.name}
+                      loading="lazy"
+                      decoding="async"
+                      width={44}
+                      height={44}
                       className="w-full h-full object-cover"
                     />
                   ) : (

@@ -12,8 +12,8 @@ import { NeighborhoodCombobox } from './NeighborhoodCombobox';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { formatPrice } from '../../../lib/utils/currency';
-import { useCart } from '../../../app/providers/CartProvider';
-import { useAuth } from '../../../app/providers/AuthProvider';
+import { useCart } from '../../../app/providers/cart-context';
+import { useAuth } from '../../../app/providers/auth-context';
 import type { ValidateCouponResponse } from '../../../types';
 import { PaymentProvider } from '../../../types/enums';
 import type { DeliveryMethod, DeliveryNeighborhood } from '../../../types';
@@ -122,12 +122,13 @@ export const CheckoutForm: React.FC = () => {
       }
 
       if (payment.paymentUrl) {
-        window.location.href = payment.paymentUrl;
+        window.location.assign(payment.paymentUrl);
       } else {
         navigate(`/checkout/success?orderNumber=${encodeURIComponent(order.orderNumber)}`);
       }
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Erreur lors de la création de la commande';
+    } catch (err: unknown) {
+      const res = err as { response?: { data?: { message?: string } } };
+      const msg = res?.response?.data?.message || 'Erreur lors de la création de la commande';
       toast.error(msg);
     }
   };

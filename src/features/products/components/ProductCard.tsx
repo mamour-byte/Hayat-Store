@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import type { Product } from '../../../types';
 import { formatPrice } from '../../../lib/utils/currency';
-import { useCart } from '../../../app/providers/CartProvider';
+import { useCart } from '../../../app/providers/cart-context';
 import { toast } from 'sonner';
 
 interface ProductCardProps {
   product: Product;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = React.memo(function ProductCard({ product }) {
   const { addItem } = useCart();
   const primaryImage = product.images?.find((img) => img.isPrimary) ?? product.images?.[0];
   const price = parseFloat(String(product.price));
@@ -45,6 +45,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <img
             src={primaryImage.url}
             alt={primaryImage.alt ?? product.name}
+            loading="lazy"
+            decoding="async"
+            width={400}
+            height={400}
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
@@ -90,4 +94,4 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
     </Link>
   );
-};
+});

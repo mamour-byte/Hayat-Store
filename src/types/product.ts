@@ -35,7 +35,7 @@ export interface ProductVariant {
   name?: string | null;
   price?: string | number | null;
   quantity: number;
-  attributes?: Record<string, any> | null;
+  attributes?: Record<string, unknown> | null;
   imageId?: string | null;
   isActive?: boolean;
   trackInventory?: boolean;

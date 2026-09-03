@@ -30,14 +30,7 @@ export const NeighborhoodCombobox: React.FC<NeighborhoodComboboxProps> = ({
     [neighborhoods, selectedNeighborhoodId]
   );
 
-  // Sync search term when selection changes or dropdown opens
-  useEffect(() => {
-    if (selectedNeighborhood && !isOpen) {
-      setSearchTerm(selectedNeighborhood.name);
-    } else if (!selectedNeighborhood && !isOpen) {
-      setSearchTerm('');
-    }
-  }, [selectedNeighborhood, isOpen]);
+  const displayValue = isOpen ? searchTerm : (selectedNeighborhood?.name ?? '');
 
   // Click outside to close
   useEffect(() => {
@@ -82,6 +75,7 @@ export const NeighborhoodCombobox: React.FC<NeighborhoodComboboxProps> = ({
   };
 
   const handleInputFocus = () => {
+    setSearchTerm(selectedNeighborhood?.name ?? '');
     setIsOpen(true);
   };
 
@@ -99,7 +93,7 @@ export const NeighborhoodCombobox: React.FC<NeighborhoodComboboxProps> = ({
         <input
           ref={inputRef}
           type="text"
-          value={searchTerm}
+          value={displayValue}
           onChange={(e) => {
             setSearchTerm(e.target.value);
             if (!isOpen) setIsOpen(true);
@@ -129,7 +123,10 @@ export const NeighborhoodCombobox: React.FC<NeighborhoodComboboxProps> = ({
           )}
           <button
             type="button"
-            onClick={() => setIsOpen((prev) => !prev)}
+            onClick={() => {
+              if (!isOpen) setSearchTerm(selectedNeighborhood?.name ?? '');
+              setIsOpen((prev) => !prev);
+            }}
             className="p-1 text-[#6d7175] hover:text-[#1a1a1a] rounded-lg transition-colors cursor-pointer"
           >
             <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />

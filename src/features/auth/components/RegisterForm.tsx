@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Phone } from 'lucide-react';
-import { useAuth } from '../../../app/providers/AuthProvider';
+import { useAuth } from '../../../app/providers/auth-context';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 

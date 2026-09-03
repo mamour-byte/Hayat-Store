@@ -58,7 +58,25 @@ export const AdminShippingZonesPage: React.FC = () => {
   };
 
   useEffect(() => {
-    void loadData();
+    let ignore = false;
+    (async () => {
+      try {
+        const [zonesData, neighborhoodsData] = await Promise.all([
+          adminService.getShippingZones(),
+          adminService.getNeighborhoodsAdmin(),
+        ]);
+        if (ignore) return;
+        setZones(zonesData);
+        setNeighborhoods(neighborhoodsData);
+      } catch {
+        if (!ignore) toast.error('Erreur lors du chargement des données de livraison');
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // --- ZONES HANDLERS ---
@@ -119,8 +137,8 @@ export const AdminShippingZonesPage: React.FC = () => {
         void loadData();
       }
       setIsZoneModalOpen(false);
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Impossible d’enregistrer la zone';
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Impossible d’enregistrer la zone';
       toast.error(msg);
     }
   };
@@ -188,8 +206,8 @@ export const AdminShippingZonesPage: React.FC = () => {
       }
       setIsNeighborhoodModalOpen(false);
       void loadData();
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Impossible d’enregistrer le quartier';
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Impossible d’enregistrer le quartier';
       toast.error(msg);
     }
   };

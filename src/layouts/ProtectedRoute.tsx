@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useAuth } from '../app/providers/AuthProvider';
+import { useAuth } from '../app/providers/auth-context';
 import { Spinner } from '../components/ui/Spinner';
 import type { UserRole } from '../types';
 

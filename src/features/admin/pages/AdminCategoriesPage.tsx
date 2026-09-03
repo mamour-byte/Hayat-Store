@@ -25,24 +25,26 @@ export const AdminCategoriesPage: React.FC = () => {
   });
 
   useEffect(() => {
-    loadData();
+    let ignore = false;
+    (async () => {
+      try {
+        const [catsData, prodsData] = await Promise.all([
+          adminService.getCategories(),
+          adminService.getProducts(),
+        ]);
+        if (ignore) return;
+        setCategories(catsData);
+        setProducts(prodsData);
+      } catch {
+        if (!ignore) toast.error('Erreur lors du chargement des catégories');
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
   }, []);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [catsData, prodsData] = await Promise.all([
-        adminService.getCategories(),
-        adminService.getProducts(),
-      ]);
-      setCategories(catsData);
-      setProducts(prodsData);
-    } catch {
-      toast.error('Erreur lors du chargement des catégories');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const getProductCountForCategory = (catId: string, catName: string) => {
     return products.filter(
@@ -194,7 +196,7 @@ export const AdminCategoriesPage: React.FC = () => {
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="w-14 h-14 rounded-2xl overflow-hidden bg-[#f6f6f7] border border-[#e1e3e5] shrink-0">
                       {cat.imageUrl ? (
-                        <img src={cat.imageUrl} alt={cat.name} className="w-full h-full object-cover" />
+                        <img src={cat.imageUrl} alt={cat.name} loading="lazy" decoding="async" width={48} height={48} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[#008060]">
                           <FolderTree className="w-6 h-6 opacity-60" />

@@ -1,21 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Cart, AddToCartPayload } from '../../types';
 import { apiClient } from '../../lib/api/client';
 import { API_ENDPOINTS } from '../../lib/api/endpoints';
-
-interface CartContextValue {
-  cart: Cart | null;
-  itemCount: number;
-  subtotal: number;
-  isLoading: boolean;
-  fetchCart: () => Promise<void>;
-  addItem: (payload: AddToCartPayload) => Promise<void>;
-  updateItemQuantity: (itemId: string, quantity: number) => Promise<void>;
-  removeItem: (itemId: string) => Promise<void>;
-  clearCart: () => Promise<void>;
-}
-
-const CartContext = createContext<CartContextValue | undefined>(undefined);
+import { CartContext, type CartContextValue } from './cart-context';
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<Cart | null>(null);
@@ -24,16 +11,32 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const itemCount = cart?.meta?.itemCount ?? 0;
   const subtotal = cart?.meta?.total ?? 0;
 
-  const fetchCart = useCallback(async () => {
+  const loadCart = useCallback(async (): Promise<Cart | null> => {
     try {
       const { data } = await apiClient.get<Cart>(API_ENDPOINTS.CART.GET);
-      setCart(data);
+      return data;
     } catch {
-      setCart(null);
-    } finally {
-      setIsLoading(false);
+      return null;
     }
   }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    void loadCart().then((data) => {
+      if (ignore) return;
+      setCart(data);
+      setIsLoading(false);
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [loadCart]);
+
+  const fetchCart = useCallback(async () => {
+    const data = await loadCart();
+    setCart(data);
+    setIsLoading(false);
+  }, [loadCart]);
 
   const addItem = useCallback(
     async (payload: AddToCartPayload) => {
@@ -69,33 +72,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+  const contextValue = useMemo<CartContextValue>(
+    () => ({
+      cart,
+      itemCount,
+      subtotal,
+      isLoading,
+      fetchCart,
+      addItem,
+      updateItemQuantity,
+      removeItem,
+      clearCart,
+    }),
+    [cart, itemCount, subtotal, isLoading, fetchCart, addItem, updateItemQuantity, removeItem, clearCart]
+  );
 
   return (
     <CartContext.Provider
-      value={{
-        cart,
-        itemCount,
-        subtotal,
-        isLoading,
-        fetchCart,
-        addItem,
-        updateItemQuantity,
-        removeItem,
-        clearCart,
-      }}
+      value={contextValue}
     >
       {children}
     </CartContext.Provider>
   );
-};
-
-export const useCart = (): CartContextValue => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  return context;
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   TrendingUp,
@@ -13,57 +13,63 @@ import {
   Calendar,
   RefreshCw,
 } from 'lucide-react';
-import { adminService } from '../services/admin.service';
-import type { DashboardStatsResponse } from '../../../types';
+import { useAdminDashboardStats } from '../hooks/useAdminQueries';
 import { formatPrice } from '../../../lib/utils/currency';
 import { Button } from '../../../components/ui/Button';
 import { OrderStatus } from '../../../types/enums';
-import { toast } from 'sonner';
+
+const toNumber = (value: unknown): number => {
+  const number = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+type TopProduct = {
+  id?: string;
+  productId?: string;
+  name?: string;
+  productName?: string;
+  revenue?: number | string;
+  unitsSold?: number | string;
+  quantity?: number | string;
+  soldQuantity?: number | string;
+  totalQuantity?: number | string;
+  quantitySold?: number | string;
+  totalQuantitySold?: number | string;
+  totalUnits?: number | string;
+  units?: number | string;
+  totalSold?: number | string;
+  salesCount?: number | string;
+  count?: number | string;
+};
+
+const getProductUnits = (product: TopProduct): number =>
+  toNumber(
+    product.unitsSold ??
+      product.quantity ??
+      product.soldQuantity ??
+      product.totalQuantity ??
+      product.quantitySold ??
+      product.totalQuantitySold ??
+      product.totalUnits ??
+      product.units ??
+      product.totalSold ??
+      product.salesCount ??
+      product.count,
+  );
 
 export const AdminDashboardPage: React.FC = () => {
-  const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const defaultEndDate = new Date().toISOString().split('T')[0];
-  const defaultStartDate = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-  const [startDate, setStartDate] = useState(defaultStartDate);
-  const [endDate, setEndDate] = useState(defaultEndDate);
+  const [startDate, setStartDate] = useState(() =>
+    new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [limit, setLimit] = useState<number>(10);
   const [activePreset, setActivePreset] = useState<'30days' | '7days' | 'month' | 'custom'>('30days');
 
-  const fetchStats = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const data = await adminService.getDashboardStats({
-        startDate,
-        endDate,
-        limit,
-      });
-      setStats(data);
-    } catch (err: any) {
-      const status = err.response?.status;
-      const msg = err.response?.data?.message || 'Erreur de chargement des statistiques';
-      if (status === 400) {
-        toast.error(`Erreur de paramètre: ${msg}`);
-      } else if (status === 401) {
-        toast.error('Session expirée ou utilisateur non authentifié');
-      } else if (status === 403) {
-        toast.error('Accès refusé: rôle Admin ou Staff requis');
-      } else {
-        toast.error(msg);
-      }
-      setErrorMessage(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [startDate, endDate, limit]);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  const { data: stats = null, isLoading, isError, refetch } = useAdminDashboardStats({
+    startDate,
+    endDate,
+    limit,
+  });
 
   const handlePresetChange = (preset: '30days' | '7days' | 'month') => {
     setActivePreset(preset);
@@ -102,66 +108,45 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  const topProducts = (stats?.sales.topProducts?.length
-    ? stats.sales.topProducts
-    : stats?.products.topProducts ?? []
-  ).slice(0, 7);
-  const toNumber = (value: unknown): number => {
-    const number = typeof value === 'number' ? value : Number(value);
-    return Number.isFinite(number) ? number : 0;
-  };
-  const getProductUnits = (product: (typeof topProducts)[number]): number => {
-    const productData = product as typeof product & {
-      units?: number | string;
-      quantitySold?: number | string;
-      totalUnits?: number | string;
-      totalQuantitySold?: number | string;
-      totalSold?: number | string;
-      count?: number | string;
-      salesCount?: number | string;
-    };
-    return toNumber(
-      productData.unitsSold ??
-        productData.quantity ??
-        productData.soldQuantity ??
-        productData.totalQuantity ??
-        productData.quantitySold ??
-        productData.totalQuantitySold ??
-        productData.totalUnits ??
-        productData.units ??
-        productData.totalSold ??
-        productData.salesCount ??
-        productData.count,
-    );
-  };
-  const fallbackProducts = (stats?.recentOrders ?? []).reduce<typeof topProducts>((products, order) => {
-    const items = Array.isArray(order.items) ? order.items : [];
-    items.forEach((item) => {
-      const existing = products.find((product) => product.productId === item.productId || product.name === item.productName);
-      if (existing) {
-        existing.unitsSold = getProductUnits(existing) + toNumber(item.quantity);
-      } else {
-        products.push({ productId: item.productId, name: item.productName, unitsSold: toNumber(item.quantity), revenue: toNumber(item.total) });
-      }
-    });
-    return products;
-  }, []);
-  const chartProducts = topProducts.some((product) => getProductUnits(product) > 0) ? topProducts : fallbackProducts;
-  const chartProductUnits = chartProducts.reduce((total, product) => total + getProductUnits(product), 0);
-  const pieSegments = chartProducts.reduce<{ segments: string[]; offset: number }>(
-    (result, product, index) => {
-      const unitsSold = getProductUnits(product);
-      const nextOffset = result.offset + (chartProductUnits ? (unitsSold / chartProductUnits) * 100 : 0);
-      return {
-        segments: [
-          ...result.segments,
-          `${['#008060', '#1d8cf8', '#f59e0b', '#e11d48', '#7c3aed', '#0f766e', '#64748b'][index]} ${result.offset}% ${nextOffset}%`,
-        ],
-        offset: nextOffset,
-      };
-    },
-    { segments: [], offset: 0 },
-  ).segments;
+  const {
+    chartProducts,
+    chartProductUnits,
+    pieSegments,
+  } = useMemo(() => {
+    const topProducts = (stats?.sales.topProducts?.length
+      ? stats.sales.topProducts
+      : stats?.products.topProducts ?? []
+    ).slice(0, 7);
+    const fallbackProducts = (stats?.recentOrders ?? []).reduce<TopProduct[]>((products, order) => {
+      const items = Array.isArray(order.items) ? order.items : [];
+      items.forEach((item) => {
+        const existing = products.find((product) => product.productId === item.productId || product.name === item.productName);
+        if (existing) {
+          existing.unitsSold = getProductUnits(existing) + toNumber(item.quantity);
+        } else {
+          products.push({ productId: item.productId, name: item.productName, unitsSold: toNumber(item.quantity), revenue: toNumber(item.total) });
+        }
+      });
+      return products;
+    }, []);
+    const chartProducts = topProducts.some((product) => getProductUnits(product) > 0) ? topProducts : fallbackProducts;
+    const chartProductUnits = chartProducts.reduce((total, product) => total + getProductUnits(product), 0);
+    const pieSegments = chartProducts.reduce<{ segments: string[]; offset: number }>(
+      (result, product, index) => {
+        const unitsSold = getProductUnits(product);
+        const nextOffset = result.offset + (chartProductUnits ? (unitsSold / chartProductUnits) * 100 : 0);
+        return {
+          segments: [
+            ...result.segments,
+            `${['#008060', '#1d8cf8', '#f59e0b', '#e11d48', '#7c3aed', '#0f766e', '#64748b'][index]} ${result.offset}% ${nextOffset}%`,
+          ],
+          offset: nextOffset,
+        };
+      },
+      { segments: [], offset: 0 },
+    ).segments;
+    return { chartProducts, chartProductUnits, pieSegments };
+  }, [stats]);
 
   return (
     <div className="space-y-8">
@@ -264,7 +249,7 @@ export const AdminDashboardPage: React.FC = () => {
               </select>
             </div>
             <button
-              onClick={fetchStats}
+              onClick={() => refetch()}
               disabled={isLoading}
               className="p-2 bg-[#f0f9f6] text-[#008060] border border-[#008060]/20 rounded-xl hover:bg-[#008060] hover:text-white transition-colors cursor-pointer"
               title="Rafraîchir les données"
@@ -280,12 +265,12 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 border-4 border-[#008060] border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : errorMessage && !stats ? (
+      ) : isError && !stats ? (
         <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl p-6 text-center space-y-3">
           <AlertTriangle className="w-8 h-8 mx-auto text-rose-600" />
           <h3 className="font-bold">Impossible de charger les statistiques</h3>
-          <p className="text-xs">{errorMessage}</p>
-          <Button size="sm" onClick={fetchStats}>Réessayer</Button>
+          <p className="text-xs">Une erreur est survenue lors du chargement des données.</p>
+          <Button size="sm" onClick={() => refetch()}>Réessayer</Button>
         </div>
       ) : stats ? (
         <>

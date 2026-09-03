@@ -2,14 +2,14 @@ import React from 'react';
 import { Trash2, Minus, Plus, ShoppingBag } from 'lucide-react';
 import type { CartItem } from '../../../types';
 import { formatPrice } from '../../../lib/utils/currency';
-import { useCart } from '../../../app/providers/CartProvider';
+import { useCart } from '../../../app/providers/cart-context';
 import { toast } from 'sonner';
 
 interface CartItemRowProps {
   item: CartItem;
 }
 
-export const CartItemRow: React.FC<CartItemRowProps> = ({ item }) => {
+export const CartItemRow: React.FC<CartItemRowProps> = React.memo(function CartItemRow({ item }) {
   const { updateItemQuantity, removeItem } = useCart();
   const image = item.product?.images?.[0];
   const unitPrice = parseFloat(String(item.unitPrice || item.product?.price || 0));
@@ -33,6 +33,10 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({ item }) => {
           <img
             src={image.url}
             alt={item.product?.name}
+            loading="lazy"
+            decoding="async"
+            width={80}
+            height={80}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
@@ -97,5 +101,5 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({ item }) => {
       </div>
     </div>
   );
-};
+});
 
