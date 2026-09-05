@@ -103,7 +103,7 @@ export const setupInterceptors = (axiosInstance: AxiosInstance) => {
       }
 
       // Handle general error notifications
-      if (error.response?.data) {
+      if (error.response?.data && error.response.status < 500) {
         const data = error.response.data as { message?: string | string[] };
         const message = Array.isArray(data.message)
           ? data.message.join(', ')
@@ -112,9 +112,10 @@ export const setupInterceptors = (axiosInstance: AxiosInstance) => {
         if (!originalRequest?.url?.includes('/auth/me')) {
           toast.error(message);
         }
-      } else if (error.message && error.message !== 'canceled') {
-        toast.error(error.message);
       }
+
+      // Server (5xx) and network errors are silently ignored in production:
+      // they carry no actionable information for the end user.
 
       return Promise.reject(error);
     }

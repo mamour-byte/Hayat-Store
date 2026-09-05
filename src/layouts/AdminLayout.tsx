@@ -56,9 +56,7 @@ const SidebarContent = React.memo(function SidebarContent({
   return (
     <div className="flex flex-col h-full bg-white text-[#1a1a1a]">
       <div className="flex items-center gap-3 px-6 py-5 border-b border-[#e1e3e5]">
-        <div className="w-9 h-9 bg-[#008060] rounded-xl flex items-center justify-center text-white shadow-xs">
-          <span className="font-black text-lg">H</span>
-        </div>
+        <img src="/assets/logo.png" alt="Hayat Store" className="h-9 w-auto" />
         <div>
           <h2 className="font-bold text-[#1a1a1a] text-base tracking-tight leading-none flex items-center gap-1.5">
             HAYAT <span className="text-[#008060] font-semibold">ADMIN</span>

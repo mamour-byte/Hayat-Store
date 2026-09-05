@@ -16,10 +16,7 @@ export const CartSummary: React.FC<CartSummaryProps> = React.memo(function CartS
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
   const [isApplying, setIsApplying] = useState(false);
 
-  const FREE_SHIPPING_THRESHOLD = 25000;
-  const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const shippingCost = isFreeShipping ? 0 : (subtotal > 0 ? 1500 : 0);
-
+const shippingCost = subtotal > 0 ? 1500 : 0;
   const discountAmount = appliedCoupon ? (subtotal * appliedCoupon.discount) / 100 : 0;
   const finalTotal = Math.max(0, subtotal - discountAmount + shippingCost);
 
@@ -116,13 +113,9 @@ export const CartSummary: React.FC<CartSummaryProps> = React.memo(function CartS
 
         <div className="flex justify-between text-[#6d7175]">
           <span>Livraison (Dakar)</span>
-          {isFreeShipping ? (
-            <span className="text-[#008060] font-bold bg-[#f0f9f6] px-2 py-0.5 rounded-md text-xs">
-              OFFERTE
-            </span>
-          ) : (
-            <span className="font-semibold text-[#1a1a1a]">{formatPrice(shippingCost)}</span>
-          )}
+          <span className="font-semibold text-[#1a1a1a]">
+            {subtotal > 0 ? formatPrice(shippingCost) : formatPrice(0)}
+          </span>
         </div>
 
         <div className="pt-4 border-t border-[#e1e3e5] flex justify-between items-baseline">

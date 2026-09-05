@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { X, ShoppingBag, ShoppingCart, ArrowRight, Truck } from 'lucide-react';
+import { X, ShoppingBag, ShoppingCart, ArrowRight } from 'lucide-react';
 import { useCart } from '../../../app/providers/cart-context';
 import { CartItemRow } from './CartItemRow';
 import { formatPrice } from '../../../lib/utils/currency';
@@ -13,9 +13,6 @@ interface CartDrawerProps {
 export const CartDrawer: React.FC<CartDrawerProps> = React.memo(function CartDrawer({ isOpen, onClose }) {
   const { cart, itemCount, subtotal } = useCart();
   const cartItems = cart?.items ?? [];
-  const FREE_SHIPPING_THRESHOLD = 25000;
-  const progressPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
-  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
   return (
     <>
@@ -51,27 +48,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = React.memo(function CartDra
             <X className="w-5 h-5" />
           </button>
         </div>
-
-        {/* Free Shipping bar banner inside drawer */}
-        {itemCount > 0 && (
-          <div className="bg-[#f0f9f6] px-5 py-3 border-b border-[#008060]/20 space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-medium text-[#008060]">
-              <span className="flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5" />
-                {progressPercent >= 100
-                  ? 'Livraison gratuite atteinte !'
-                  : `Plus que ${formatPrice(remainingForFreeShipping)} pour la livraison offerte`}
-              </span>
-              <span className="font-bold">{Math.round(progressPercent)}%</span>
-            </div>
-            <div className="w-full bg-white h-1.5 rounded-full overflow-hidden border border-[#008060]/20">
-              <div
-                className="bg-[#008060] h-full rounded-full transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Items List */}
         <div className="flex-1 overflow-y-auto px-5 py-2">

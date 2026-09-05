@@ -45,7 +45,7 @@ export const MainLayout: React.FC = () => {
       <ScrollToTop />
       {/* Top Banner */}
       <div className="bg-[#008060] text-white text-xs py-2 px-4 text-center font-medium tracking-wide">
-        Livraison gratuite à partir de 25 000 FCFA partout à Dakar — Paiement Wave & Orange Money
+        Bienvenue sur Hayat Store
       </div>
 
       {/* Header */}
@@ -53,10 +53,8 @@ export const MainLayout: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between gap-6 h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-[#1a1a1a] flex-shrink-0">
-              <span className="w-3 h-3 bg-[#008060] rounded-full inline-block" />
-              <span>HAYAT</span>
-              <span className="text-[#008060] font-normal">STORE</span>
+            <Link to="/" className="flex items-center flex-shrink-0">
+              <img src="/assets/logo.png" alt="Hayat Store" className="h-14 w-auto" />
             </Link>
 
             {/* Nav Links (Desktop) */}
@@ -211,10 +209,7 @@ export const MainLayout: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-3 md:col-span-2">
-              <div className="flex items-center gap-2 font-bold text-lg text-[#1a1a1a]">
-                <span className="w-3 h-3 bg-[#008060] rounded-full inline-block" />
-                HAYAT STORE
-              </div>
+              <img src="/assets/logo.png" alt="Hayat Store" className="h-14 w-auto" />
               <p className="text-sm text-[#6d7175] max-w-md leading-relaxed">
                 Boutique en ligne épurée au Sénégal. Produits rigoureusement sélectionnés, livraison rapide et service client dédié.
               </p>
@@ -232,8 +227,8 @@ export const MainLayout: React.FC = () => {
             <div className="space-y-3">
               <h3 className="text-xs font-semibold text-[#1a1a1a] uppercase tracking-wider">Contact & Support</h3>
               <ul className="space-y-2 text-sm text-[#6d7175]">
-                <li>support@hayatstore.sn</li>
-                <li>+221 77 000 00 00</li>
+                <li>contact@hayatstore.sn</li>
+                <li>70 618 60 27</li>
                 <li>Dakar, Sénégal</li>
               </ul>
             </div>
@@ -242,7 +237,9 @@ export const MainLayout: React.FC = () => {
           <div className="border-t border-[#e1e3e5] mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center text-xs text-[#6d7175] gap-4">
             <p>© {new Date().getFullYear()} Hayat Store. Tous droits réservés.</p>
             <div className="flex items-center gap-4">
-              <span>Paiement sécurisé : Wave · Orange Money · Cash à la livraison</span>
+              <span>Réalisé par <a href="https://forge-sn.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#008060] transition-colors">Forge</a></span>
+              <span className="hidden sm:inline">·</span>
+              <span className="hidden sm:inline">Paiement sécurisé : Wave · Orange Money · Cash à la livraison</span>
             </div>
           </div>
         </div>

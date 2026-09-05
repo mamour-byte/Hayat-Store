@@ -1,18 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, ShoppingCart, ArrowRight, Trash2, Truck, Sparkles } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, ArrowRight, Trash2 } from 'lucide-react';
 import { useCart } from '../../../app/providers/cart-context';
 import { CartItemRow } from '../components/CartItemRow';
 import { CartSummary } from '../components/CartSummary';
 import { Button } from '../../../components/ui/Button';
-import { formatPrice } from '../../../lib/utils/currency';
 
 export const CartPage: React.FC = () => {
-  const { cart, subtotal, itemCount, clearCart } = useCart();
+  const { cart, itemCount, clearCart } = useCart();
   const cartItems = cart?.items ?? [];
-  const FREE_SHIPPING_THRESHOLD = 25000;
-  const progressPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
-  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
   if (cartItems.length === 0) {
     return (
@@ -58,31 +54,6 @@ export const CartPage: React.FC = () => {
           <Trash2 className="w-4 h-4" />
           Vider le panier
         </button>
-      </div>
-
-      {/* Free Shipping Progress Banner */}
-      <div className="bg-white border border-[#008060]/20 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
-        <div className="flex items-center justify-between text-xs sm:text-sm font-semibold">
-          <div className="flex items-center gap-2 text-[#008060]">
-            <Truck className="w-4 h-4" />
-            {progressPercent >= 100 ? (
-              <span className="flex items-center gap-1 text-[#008060] font-bold">
-                <Sparkles className="w-4 h-4 text-amber-500" /> Félicitations ! Vous bénéficiez de la livraison GRATUITE à Dakar.
-              </span>
-            ) : (
-              <span>
-                Plus que <strong className="text-[#1a1a1a]">{formatPrice(remainingForFreeShipping)}</strong> pour obtenir la livraison offerte !
-              </span>
-            )}
-          </div>
-          <span className="text-[#6d7175] text-xs font-bold">{Math.round(progressPercent)}%</span>
-        </div>
-        <div className="w-full bg-[#f6f6f7] h-2.5 rounded-full overflow-hidden border border-[#e1e3e5]">
-          <div
-            className="bg-[#008060] h-full rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
       </div>
 
       {/* Grid */}
