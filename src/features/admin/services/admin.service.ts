@@ -1398,7 +1398,7 @@ export const adminService = {
 
   updateUserRole: async (userId: string, role: UserRole): Promise<User> => {
     try {
-      const { data } = await apiClient.patch<User>(API_ENDPOINTS.USERS.ADMIN_UPDATE(userId), {
+      const { data } = await apiClient.patch<User>(API_ENDPOINTS.USERS.ADMIN_UPDATE_ROLE(userId), {
         role,
       });
       return data;

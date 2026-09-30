@@ -74,6 +74,7 @@ export const API_ENDPOINTS = {
   USERS: {
     ADMIN_LIST: '/users',
     ADMIN_UPDATE: (id: string) => `/users/${id}`,
+    ADMIN_UPDATE_ROLE: (id: string) => `/users/${id}/role`,
   },
   STATS: {
     DASHBOARD: '/stats/dashboard',
