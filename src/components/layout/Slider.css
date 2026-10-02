@@ -1,6 +1,6 @@
 .pod-slider {
   --item1-transform: translateX(-100%) translateY(-5%) scale(1.5);
-  --item1-filter: blur(30px);
+  --item1-filter: none;
   --item1-zIndex: 11;
   --item1-opacity: 0;
 
@@ -10,17 +10,17 @@
   --item2-opacity: 1;
 
   --item3-transform: translate(50%, 10%) scale(0.8);
-  --item3-filter: blur(10px);
+  --item3-filter: none;
   --item3-zIndex: 9;
-  --item3-opacity: 1;
+  --item3-opacity: 0;
 
   --item4-transform: translate(90%, 20%) scale(0.5);
-  --item4-filter: blur(30px);
+  --item4-filter: none;
   --item4-zIndex: 8;
-  --item4-opacity: 1;
+  --item4-opacity: 0;
 
   --item5-transform: translate(120%, 30%) scale(0.3);
-  --item5-filter: blur(40px);
+  --item5-filter: none;
   --item5-zIndex: 7;
   --item5-opacity: 0;
 
@@ -58,7 +58,7 @@
 .pod-slider .list .item {
   position: absolute;
   left: 0%;
-  width: 70%;
+  width: 100%;
   height: 100%;
   font-size: 15px;
   transition: left 0.5s, opacity 0.5s, width 0.5s;
@@ -71,11 +71,13 @@
   transform: translateX(0);
 }
 .pod-slider .list .item img {
-  width: 50%;
+  width: 62%;
+  height: 90%;
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
+  object-fit: contain;
   transition: right 1.5s;
   user-select: none;
 }
@@ -87,7 +89,7 @@
 .pod-slider .list .item:nth-child(2) .introduce {
   opacity: 1;
   pointer-events: auto;
-  width: 400px;
+  width: 38%;
   max-width: 100%;
   position: absolute;
   top: 50%;
@@ -137,11 +139,15 @@
   transform: var(--item3-transform);
   filter: var(--item3-filter);
   z-index: var(--item3-zIndex);
+  opacity: var(--item3-opacity);
+  pointer-events: none;
 }
 .pod-slider .list .item:nth-child(4) {
   transform: var(--item4-transform);
   filter: var(--item4-filter);
   z-index: var(--item4-zIndex);
+  opacity: var(--item4-opacity);
+  pointer-events: none;
 }
 .pod-slider .list .item:nth-child(5) {
   transform: var(--item5-transform);
@@ -266,8 +272,8 @@
 }
 
 @media screen and (max-width: 991px) {
-  .pod-slider .list .item {
-    width: 90%;
+  .pod-slider .list .item .introduce .topic {
+    font-size: clamp(2em, 5vw, 3em);
   }
 }
 @media screen and (max-width: 767px) {
@@ -282,10 +288,10 @@
     font-size: 10px;
   }
   .pod-slider .list .item:nth-child(2) .introduce {
-    width: 62%;
+    width: 42%;
   }
   .pod-slider .list .item img {
-    width: 40%;
+    width: 58%;
   }
   .pod-slider .list .item .introduce .des {
     max-height: 72px;

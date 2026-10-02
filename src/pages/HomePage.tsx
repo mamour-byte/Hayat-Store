@@ -9,28 +9,28 @@ import type { SlideItem } from '../components/layout/Slider';
 const sliderItems: SlideItem[] = [
   {
     id: 1,
-    image: '../assets/img1.png',
+    image: '../assets/sport.png',
     eyebrow: 'Hayat Store',
     title: 'Nouveautés',
     description: 'Découvrez notre sélection de produits d\'exception livrés chez vous.',
   },
   {
     id: 2,
-    image: '../assets/macbook.png',
+    image: '../assets/Tech.png',
     eyebrow: 'Hayat Store',
     title: 'Promotions',
     description: 'Des offres exclusives sur une large gamme de produits garantis.',
   },
   {
     id: 3,
-    image: '../assets/img2.png',
+    image: '../assets/cuisine-ok.png',
     eyebrow: 'Hayat Store',
     title: 'Promotions',
     description: 'Des offres exclusives sur une large gamme de produits garantis.',
   },
   {
     id: 4,
-    image: '../assets/img3.png',
+    image: '../assets/soins.png',
     eyebrow: 'Hayat Store',
     title: 'Livraison Express',
     description: 'Commandez maintenant et recevez votre colis sous 24h à 48h.',
