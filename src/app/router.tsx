@@ -28,6 +28,7 @@ const AdminReviewsPage = lazy(() => import('../features/admin/pages/AdminReviews
 const AdminUsersPage = lazy(() => import('../features/admin/pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })));
 const AdminShippingZonesPage = lazy(() => import('../features/admin/pages/AdminShippingZonesPage').then((m) => ({ default: m.AdminShippingZonesPage })));
 const AdminInventoryPage = lazy(() => import('../features/admin/pages/AdminInventoryPage').then((m) => ({ default: m.AdminInventoryPage })));
+const AdminMarketingPage = lazy(() => import('../features/admin/pages/AdminMarketingPage').then((m) => ({ default: m.AdminMarketingPage })));
 
 function PageLoader() {
   return (
@@ -75,6 +76,7 @@ export const router = createBrowserRouter([
         element: <AdminLayout />,
         children: [
           { index: true, element: withSuspense(<AdminDashboardPage />) },
+          { path: 'marketing', element: withSuspense(<AdminMarketingPage />) },
           { path: 'orders', element: withSuspense(<AdminOrdersPage />) },
           { path: 'products', element: withSuspense(<AdminProductsPage />) },
           { path: 'inventory', element: withSuspense(<AdminInventoryPage />) },

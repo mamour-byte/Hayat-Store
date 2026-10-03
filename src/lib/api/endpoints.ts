@@ -94,4 +94,17 @@ export const API_ENDPOINTS = {
     MARK_ALL_READ: '/notifications/mark-all-read',
     DELETE: (id: string) => `/notifications/${id}`,
   },
+  TRACKING: {
+    SESSION_START: '/tracking/session/start',
+    PAGEVIEW: '/tracking/pageview',
+    IDENTIFY: '/tracking/identify',
+    SEARCH: '/tracking/search',
+    EVENTS: '/tracking/events',
+  },
+  MARKETING: {
+    OVERVIEW: '/marketing/overview',
+    PLATFORMS: '/marketing/platforms',
+    FUNNEL: '/marketing/funnel',
+    TIMELINE: '/marketing/timeline',
+  },
 };

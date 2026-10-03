@@ -16,6 +16,7 @@ import {
   FolderTree,
   MapPin,
   Boxes,
+  TrendingUp,
 } from 'lucide-react';
 import { useAuth } from '../app/providers/auth-context';
 import { useAdminOrderNotifications } from '../features/admin/hooks/useAdminOrderNotifications';
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { to: '/admin/categories', label: 'Catégories', icon: FolderTree },
   { to: '/admin/coupons', label: 'Coupons & Promos', icon: Tag },
   { to: '/admin/reviews', label: 'Avis Clients', icon: Star },
+  { to: '/admin/marketing', label: 'Marketing ', icon: TrendingUp },
   { to: '/admin/users', label: 'Utilisateurs', icon: Users },
   { to: '/admin/shipping-zones', label: 'Zones de livraison', icon: MapPin },
 ];

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +14,7 @@ import { Button } from '../../../components/ui/Button';
 import { formatPrice } from '../../../lib/utils/currency';
 import { useCart } from '../../../app/providers/cart-context';
 import { useAuth } from '../../../app/providers/auth-context';
+import { trackInitiateCheckout, trackAddPaymentInfo, flushEvents } from '../../marketing/tracking';
 import type { ValidateCouponResponse } from '../../../types';
 import { PaymentProvider } from '../../../types/enums';
 import type { DeliveryMethod, DeliveryNeighborhood } from '../../../types';
@@ -54,6 +55,11 @@ export const CheckoutForm: React.FC = () => {
 
   const discount = couponResult?.discountAmount ?? 0;
   const total = Math.max(0, subtotal + shippingCost - discount);
+
+  // INITIATE_CHECKOUT: once per session, keyed on the cart value at entry.
+  useEffect(() => {
+    if (subtotal > 0) trackInitiateCheckout(subtotal);
+  }, [subtotal]);
 
   const {
     register,
@@ -113,6 +119,12 @@ export const CheckoutForm: React.FC = () => {
       });
 
       const payment = await initiatePayment({ orderId: order.id, provider: selectedProvider });
+
+      // Sent before the redirect: once we hand off to the payment provider this
+      // component unmounts, and the queued event would be lost with it. PURCHASE
+      // stays server-side and is intentionally not emitted here.
+      trackAddPaymentInfo({ orderId: order.id, value: total });
+      await flushEvents();
 
       // Vider le panier après validation réussie de la commande
       try {

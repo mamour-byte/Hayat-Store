@@ -11,3 +11,4 @@ export * from './review';
 export * from './stats';
 export * from './inventory';
 export * from './notification';
+export * from './marketing';

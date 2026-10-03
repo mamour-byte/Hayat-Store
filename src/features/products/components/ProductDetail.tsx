@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ShoppingCart, Minus, Plus, Package, Tag, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { Spinner } from '../../../components/ui/Spinner';
 import { formatPrice } from '../../../lib/utils/currency';
 import { useCart } from '../../../app/providers/cart-context';
 import { useAuth } from '../../../app/providers/auth-context';
+import { trackViewContent, trackAddToCart } from '../../marketing/tracking';
 
 export const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -22,6 +23,14 @@ export const ProductDetail: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
+  const trackedProductIdRef = useRef<string | null>(null);
+
+  // VIEW_CONTENT: one event per product per session (deduped by eventId).
+  useEffect(() => {
+    if (!product?.id || trackedProductIdRef.current === product.id) return;
+    trackedProductIdRef.current = product.id;
+    trackViewContent(product.id, Number(product.price) || undefined);
+  }, [product]);
 
   if (isLoading) {
     return (
@@ -71,6 +80,12 @@ export const ProductDetail: React.FC = () => {
     setAddingToCart(true);
     try {
       await addItem({ productId: product.id, variantId: selectedVariantId, quantity });
+      trackAddToCart({
+        productId: product.id,
+        variantId: selectedVariantId,
+        quantity,
+        value: Number(currentPrice) * quantity,
+      });
       toast.success(`"${product.name}" ajouté au panier !`);
     } catch {
       // handled by interceptor

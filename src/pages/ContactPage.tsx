@@ -5,14 +5,14 @@ const contactDetails = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'support@hayatstore.sn',
-    href: 'mailto:support@hayatstore.sn',
+    value: 'contact@hayat-sn.store',
+    href: 'mailto:contact@hayat-sn.store',
   },
   {
     icon: Phone,
     label: 'Téléphone',
-    value: '+221 77 000 00 00',
-    href: 'tel:+221770000000',
+    value: '+221 70 618 60 27',
+    href: 'tel:+221706186027',
   },
   {
     icon: MapPin,

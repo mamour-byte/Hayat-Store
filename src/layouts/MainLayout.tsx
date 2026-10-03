@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../app/providers/auth-context';
 import { useCart } from '../app/providers/cart-context';
 import { CartDrawer } from '../features/cart/components/CartDrawer';
+import { TrackingProvider } from '../features/marketing/tracking';
 import { Input } from '../components/ui/Input';
 import { ScrollToTop } from '../components/common/ScrollToTop';
 
@@ -201,7 +202,9 @@ export const MainLayout: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1">
-        <Outlet />
+        <TrackingProvider>
+          <Outlet />
+        </TrackingProvider>
       </main>
 
       {/* Footer Minimalist */}

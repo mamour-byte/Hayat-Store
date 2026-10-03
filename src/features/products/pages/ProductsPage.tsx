@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, X } from 'lucide-react';
 import { useProducts } from '../api/useProducts';
 import { ProductGrid } from '../components/ProductGrid';
 import { ProductFilters } from '../components/ProductFilters';
 import type { ProductQueryParams } from '../../../types';
+import { trackingSearch } from '../../marketing/tracking';
 import { Button } from '../../../components/ui/Button';
 
 export const ProductsPage: React.FC = () => {
@@ -20,6 +21,13 @@ export const ProductsPage: React.FC = () => {
   });
 
   const { data, isLoading } = useProducts(filters);
+
+  // Report the search with its result count, once the query resolves. Repeats
+  // inside the same visit are filtered out downstream.
+  useEffect(() => {
+    if (!filters.search || !data) return;
+    trackingSearch(filters.search, data.meta.total);
+  }, [filters.search, data]);
 
   const handleFiltersChange = (newFilters: ProductQueryParams) => {
     setFilters(newFilters);

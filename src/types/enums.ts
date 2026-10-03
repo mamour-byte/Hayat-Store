@@ -81,3 +81,37 @@ export const CartStatus = {
   EXPIRED: 'EXPIRED',
 } as const;
 export type CartStatus = (typeof CartStatus)[keyof typeof CartStatus];
+
+export const TrafficPlatform = {
+  META: 'META',
+  GOOGLE: 'GOOGLE',
+  TIKTOK: 'TIKTOK',
+  ORGANIC: 'ORGANIC',
+  DIRECT: 'DIRECT',
+  REFERRAL: 'REFERRAL',
+  EMAIL: 'EMAIL',
+  WHATSAPP: 'WHATSAPP',
+  UNKNOWN: 'UNKNOWN',
+} as const;
+export type TrafficPlatform = (typeof TrafficPlatform)[keyof typeof TrafficPlatform];
+
+export const TrackingEventName = {
+  PAGE_VIEW: 'PAGE_VIEW',
+  VIEW_CONTENT: 'VIEW_CONTENT',
+  ADD_TO_CART: 'ADD_TO_CART',
+  ADD_TO_WISHLIST: 'ADD_TO_WISHLIST',
+  INITIATE_CHECKOUT: 'INITIATE_CHECKOUT',
+  ADD_PAYMENT_INFO: 'ADD_PAYMENT_INFO',
+  PURCHASE: 'PURCHASE',
+  SEARCH: 'SEARCH',
+  LEAD: 'LEAD',
+  SUBSCRIBE: 'SUBSCRIBE',
+} as const;
+export type TrackingEventName = (typeof TrackingEventName)[keyof typeof TrackingEventName];
+
+export const MarketingGroupBy = {
+  DAY: 'day',
+  WEEK: 'week',
+  MONTH: 'month',
+} as const;
+export type MarketingGroupBy = (typeof MarketingGroupBy)[keyof typeof MarketingGroupBy];
