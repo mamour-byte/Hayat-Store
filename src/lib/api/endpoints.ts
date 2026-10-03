@@ -50,7 +50,7 @@ export const API_ENDPOINTS = {
     ZONE: (id: string) => `/shipping/zones/${id}`,
     NEIGHBORHOODS: '/shipping/neighborhoods',
     NEIGHBORHOOD: (id: string) => `/shipping/neighborhoods/${id}`,
-    NEIGHBORHOODS_ADMIN: '/admin/shipping/neighborhoods',
+    NEIGHBORHOODS_ADMIN: '/shipping/neighborhoods/admin',
     ADMIN_UPDATE_SHIPMENT: (id: string) => `/shipping/shipments/${id}/status`,
   },
   ORDERS: {
