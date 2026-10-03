@@ -174,9 +174,6 @@ export const AdminDashboardPage: React.FC = () => {
       <div className="bg-white border border-[#e1e3e5] rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
-            {/* <span className="text-xs font-bold text-[#6d7175] flex items-center gap-1.5 mr-2">
-              <Calendar className="w-4 h-4 text-[#008060]" /> Période :
-            </span> */}
             <button
               onClick={() => handlePresetChange('7days')}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${

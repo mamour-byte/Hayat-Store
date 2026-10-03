@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import {
   AlertTriangle,
   BarChart3,
-  Calendar,
   Coins,
   Filter,
   MousePointerClick,
@@ -272,9 +271,6 @@ export const AdminMarketingPage: React.FC = () => {
       <div className="bg-white border border-[#e1e3e5] rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 xl:pb-0">
-            {/* <span className="text-xs font-bold text-[#6d7175] flex items-center gap-1.5 mr-2 whitespace-nowrap">
-              <Calendar className="w-4 h-4 text-[#008060]" /> Période :
-            </span> */}
             {PRESETS.map((preset) => (
               <button
                 key={preset.key}
