@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://api.hayat-sn.store/api/sitemap.xml"
+    },
+    {
       "source": "/((?!assets/|favicon\\.svg$).*)",
       "destination": "/index.html"
     }
