@@ -53,7 +53,7 @@ export const HomePage: React.FC = () => {
     <div className="space-y-12 py-6">
       {/* Hero Section Minimalist */}
       <Slider items={sliderItems} />
-      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6">
         <div className="bg-white border border-[#e1e3e5] rounded-2xl p-8 sm:p-14 flex flex-col items-start gap-6 max-w-full">
           {/* <span className="text-xs font-semibold text-[#008060] uppercase tracking-wider bg-[#f0f9f6] px-3 py-1 rounded-full border border-[#008060]/20">
             Nouveautés Hayat Store
