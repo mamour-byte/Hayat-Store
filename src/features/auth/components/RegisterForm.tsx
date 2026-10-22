@@ -7,6 +7,7 @@ import { Mail, Lock, User, Phone } from 'lucide-react';
 import { useAuth } from '../../../app/providers/auth-context';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
+import { SocialAuthButtons } from './SocialAuthButtons';
 
 const schema = z
   .object({
@@ -45,6 +46,8 @@ export const RegisterForm: React.FC = () => {
     await registerUser(data);
     navigate('/');
   };
+
+  const handleSocialSuccess = () => navigate('/');
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-[#f6f6f7] px-4 py-12">
@@ -128,6 +131,8 @@ export const RegisterForm: React.FC = () => {
               Se connecter
             </Link>
           </p>
+
+          <SocialAuthButtons onSuccess={handleSocialSuccess} />
         </div>
       </div>
     </div>

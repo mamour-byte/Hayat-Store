@@ -7,6 +7,10 @@ export const API_ENDPOINTS = {
     ME: '/auth/me',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
+    GOOGLE: '/auth/google',
+    APPLE: '/auth/apple',
+    APPLE_INITIATE: '/auth/apple/initiate',
+    APPLE_EXCHANGE: '/auth/apple/exchange',
   },
   PRODUCTS: {
     LIST: '/products',
@@ -63,6 +67,8 @@ export const API_ENDPOINTS = {
   },
   PAYMENTS: {
     INITIATE: '/payments/initiate',
+    CHECKOUT_STATUS: '/payments/checkout-status',
+    VERIFY_BICTORYS: (orderId: string) => `/payments/bictorys/verify/${orderId}`,
   },
   REVIEWS: {
     CREATE: '/reviews',

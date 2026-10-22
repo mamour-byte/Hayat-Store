@@ -108,6 +108,8 @@ export interface TrackEventsPayload {
   sessionKey: string;
   anonymousId?: string;
   userId?: string;
+  fbp?: string;
+  fbc?: string;
   events: TrackingEventInput[];
 }
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
+import { useSeo } from '../hooks/useSeo';
 
 const contactDetails = [
   {
@@ -23,6 +24,12 @@ const contactDetails = [
 
 export const ContactPage: React.FC = () => {
   const [isSent, setIsSent] = useState(false);
+
+  useSeo({
+    title: 'Contact',
+    description:
+      'Contactez Hayat Store par email, téléphone ou via notre formulaire. Nous sommes basés à Dakar, Sénégal et répondons rapidement.',
+  });
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

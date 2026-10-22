@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Slider from '../components/layout/Slider';
 import type { SlideItem } from '../components/layout/Slider';
+import { useSeo } from '../hooks/useSeo';
 
 const sliderItems: SlideItem[] = [
   {
@@ -41,6 +42,12 @@ export const HomePage: React.FC = () => {
   const { data: categories } = useCategories();
   const { data: featuredProducts, isLoading } = useProducts({ limit: 8, status: 'ACTIVE' });
   const categoryList = Array.isArray(categories) ? categories : [];
+
+  useSeo({
+    title: 'Vente en Ligne & Livraison au Sénégal',
+    description:
+      "Découvrez Hayat Store, votre boutique e-commerce de référence au Sénégal. Produits de qualité, livraison rapide à Dakar et paiement Wave/Orange Money.",
+  });
 
   return (
     <div className="space-y-12 py-6">

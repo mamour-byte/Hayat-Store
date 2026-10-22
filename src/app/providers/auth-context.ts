@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { User, LoginCredentials, RegisterPayload } from '../../types';
+import type { User, LoginCredentials, RegisterPayload, AuthResponse } from '../../types';
 
 export interface AuthContextValue {
   user: User | null;
@@ -8,6 +8,7 @@ export interface AuthContextValue {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
+  loginWithSocial: (response: AuthResponse) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);

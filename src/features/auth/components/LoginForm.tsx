@@ -7,6 +7,7 @@ import { Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../../app/providers/auth-context';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
+import { SocialAuthButtons } from './SocialAuthButtons';
 
 const schema = z.object({
   email: z.email('Adresse email invalide'),
@@ -29,6 +30,8 @@ export const LoginForm: React.FC = () => {
     await login(data);
     navigate('/');
   };
+
+  const handleSocialSuccess = () => navigate('/');
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-[#f6f6f7] px-4 py-12">
@@ -89,6 +92,8 @@ export const LoginForm: React.FC = () => {
               Créer un compte
             </Link>
           </p>
+
+          <SocialAuthButtons onSuccess={handleSocialSuccess} />
         </div>
       </div>
     </div>

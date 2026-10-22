@@ -95,10 +95,6 @@ export const CheckoutForm: React.FC = () => {
         toast.error('Veuillez choisir un quartier de livraison');
         return;
       }
-      if (!formData.shippingAddress || formData.shippingAddress.trim() === '') {
-        toast.error('Veuillez renseigner votre adresse de livraison exacte');
-        return;
-      }
     }
 
     try {
@@ -213,7 +209,7 @@ export const CheckoutForm: React.FC = () => {
                   />
 
                   <Input
-                    label="Adresse précise"
+                    label="Adresse précise (optionnel)"
                     placeholder="Rue, numéro de villa, immeuble, étage, repère..."
                     error={errors.shippingAddress?.message}
                     {...register('shippingAddress')}

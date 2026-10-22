@@ -1,14 +1,15 @@
 import React from 'react';
 import { toast } from 'sonner';
-import { XCircle } from 'lucide-react';
+import { CreditCard, XCircle } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
 import { formatPrice } from '../../../lib/utils/currency';
 import { formatDate, getOrderStatusBadge, getPaymentStatusBadge } from '../../../lib/utils/formatters';
 import { useCancelOrder } from '../api/useOrders';
+import { useInitiatePayment } from '../../checkout/api/useCheckout';
 import type { Order } from '../../../types';
-import { OrderStatus } from '../../../types/enums';
+import { OrderStatus, PaymentProvider, PaymentStatus } from '../../../types/enums';
 
 interface OrderDetailModalProps {
   order: Order | null;
@@ -18,16 +19,41 @@ interface OrderDetailModalProps {
 
 export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, isOpen, onClose }) => {
   const { mutateAsync: cancelOrder, isPending } = useCancelOrder();
+  const { mutateAsync: initiatePayment, isPending: isPaying } = useInitiatePayment();
 
   if (!order) return null;
 
   const statusBadge = getOrderStatusBadge(order.status);
   const paymentBadge = getPaymentStatusBadge(order.paymentStatus);
 
+  const canPay =
+    order.paymentStatus !== PaymentStatus.PAID &&
+    order.status !== OrderStatus.CANCELLED &&
+    order.status !== OrderStatus.REFUNDED;
+
   const handleCancel = async () => {
     await cancelOrder(order.id);
     toast.success('Commande annulée avec succès');
     onClose();
+  };
+
+  const handlePay = async () => {
+    try {
+      const payment = await initiatePayment({
+        orderId: order.id,
+        provider: PaymentProvider.BICTORYS,
+      });
+      if (payment.paymentUrl) {
+        window.location.assign(payment.paymentUrl);
+      } else {
+        toast.error('Impossible de lancer le paiement.');
+      }
+    } catch (err: unknown) {
+      const res = err as { response?: { data?: { message?: string } } };
+      toast.error(
+        res?.response?.data?.message || 'Impossible de lancer le paiement.'
+      );
+    }
   };
 
   return (
@@ -37,16 +63,28 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, isOpe
       title={`Commande ${order.orderNumber}`}
       size="lg"
       footer={
-        order.status === OrderStatus.PENDING ? (
-          <Button
-            variant="danger"
-            leftIcon={<XCircle className="w-4 h-4" />}
-            isLoading={isPending}
-            onClick={handleCancel}
-          >
-            Annuler la commande
-          </Button>
-        ) : undefined
+        <div className="flex flex-wrap gap-2 justify-end">
+          {order.status === OrderStatus.PENDING && (
+            <Button
+              variant="danger"
+              leftIcon={<XCircle className="w-4 h-4" />}
+              isLoading={isPending}
+              onClick={handleCancel}
+            >
+              Annuler la commande
+            </Button>
+          )}
+          {canPay && (
+            <Button
+              variant="primary"
+              leftIcon={<CreditCard className="w-4 h-4" />}
+              isLoading={isPaying}
+              onClick={handlePay}
+            >
+              Payer maintenant
+            </Button>
+          )}
+        </div>
       }
     >
       <div className="space-y-5">

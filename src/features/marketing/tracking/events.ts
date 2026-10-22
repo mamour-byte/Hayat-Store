@@ -2,6 +2,7 @@ import { TrackingEventName } from '../../../types/enums';
 import type { TrackingEventInput } from '../../../types';
 import { trackPixelEvent } from '../pixel';
 import { trackingApi } from './client';
+import { getMetaCookies } from './capture';
 import { getSessionKey } from './storage';
 
 /** The API rejects batches larger than 50 events. */
@@ -93,6 +94,8 @@ export const flushEvents = async (): Promise<void> => {
   const sessionKey = context.sessionKey ?? getSessionKey();
   context = { ...context, sessionKey };
 
+  const metaCookies = getMetaCookies();
+
   isFlushing = true;
   try {
     while (queue.length > 0) {
@@ -103,6 +106,7 @@ export const flushEvents = async (): Promise<void> => {
       await trackingApi.events({
         sessionKey,
         ...(context.userId ? { userId: context.userId } : {}),
+        ...metaCookies,
         events: batch,
       });
     }

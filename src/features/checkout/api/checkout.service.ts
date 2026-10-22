@@ -8,6 +8,8 @@ import type {
   Order,
   InitiatePaymentPayload,
   PaymentInitiateResponse,
+  CheckoutStatus,
+  VerifyPaymentResponse,
 } from '../../../types';
 import { apiClient } from '../../../lib/api/client';
 import { API_ENDPOINTS } from '../../../lib/api/endpoints';
@@ -45,6 +47,28 @@ export const checkoutService = {
     const { data } = await apiClient.post<PaymentInitiateResponse>(
       API_ENDPOINTS.PAYMENTS.INITIATE,
       payload
+    );
+    return data;
+  },
+
+  /**
+   * État réel du paiement d'une commande (source de vérité : le serveur).
+   */
+  getCheckoutStatus: async (orderId: string, orderNumber?: string): Promise<CheckoutStatus> => {
+    const { data } = await apiClient.get<CheckoutStatus>(
+      API_ENDPOINTS.PAYMENTS.CHECKOUT_STATUS,
+      { params: { orderId, orderNumber } }
+    );
+    return data;
+  },
+
+  /**
+   * Demande au serveur de vérifier la transaction Bictorys.
+   * La commande n'est confirmée que si le serveur constate un paiement valide.
+   */
+  verifyBictorysPayment: async (orderId: string): Promise<VerifyPaymentResponse> => {
+    const { data } = await apiClient.post<VerifyPaymentResponse>(
+      API_ENDPOINTS.PAYMENTS.VERIFY_BICTORYS(orderId)
     );
     return data;
   },

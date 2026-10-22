@@ -12,6 +12,7 @@ import { formatPrice } from '../../../lib/utils/currency';
 import { useCart } from '../../../app/providers/cart-context';
 import { useAuth } from '../../../app/providers/auth-context';
 import { trackViewContent, trackAddToCart } from '../../marketing/tracking';
+import { useSeo, SITE_URL } from '../../../hooks/useSeo';
 
 export const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -24,6 +25,45 @@ export const ProductDetail: React.FC = () => {
   const [activeImage, setActiveImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
   const trackedProductIdRef = useRef<string | null>(null);
+
+  const primaryImage =
+    product?.images?.find((img) => img.isPrimary)?.url ?? product?.images?.[0]?.url;
+  const totalStock = product
+    ? product.hasVariants && product.variants?.length
+      ? product.variants.reduce((acc, v) => acc + (Number(v.quantity) || 0), 0)
+      : Number(product.quantity) || 0
+    : 0;
+
+  useSeo({
+    title: product?.seoTitle || product?.name,
+    description: product?.seoDescription || product?.shortDescription || undefined,
+    image: primaryImage,
+    type: 'product',
+    jsonLd: product
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          image: product.images?.map((img) => img.url),
+          description:
+            product.seoDescription || product.shortDescription || product.description || undefined,
+          sku: product.sku || undefined,
+          brand: product.brand
+            ? { '@type': 'Brand', name: product.brand.name }
+            : undefined,
+          offers: {
+            '@type': 'Offer',
+            url: `${SITE_URL}/products/${product.slug}`,
+            priceCurrency: 'XOF',
+            price: String(product.price),
+            availability:
+              totalStock > 0
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+          },
+        }
+      : undefined,
+  });
 
   // VIEW_CONTENT: one event per product per session (deduped by eventId).
   useEffect(() => {

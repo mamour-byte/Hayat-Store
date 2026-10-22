@@ -44,4 +44,15 @@ export const authService = {
   resetPassword: async (payload: ResetPasswordPayload): Promise<void> => {
     await apiClient.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, payload);
   },
+
+  socialLogin: async (provider: 'google' | 'apple', idToken: string): Promise<AuthResponse> => {
+    const endpoint = provider === 'google' ? API_ENDPOINTS.AUTH.GOOGLE : API_ENDPOINTS.AUTH.APPLE;
+    const { data } = await apiClient.post<AuthResponse>(endpoint, { idToken });
+    return data;
+  },
+
+  exchangeAppleCode: async (code: string): Promise<AuthResponse> => {
+    const { data } = await apiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.APPLE_EXCHANGE, { code });
+    return data;
+  },
 };

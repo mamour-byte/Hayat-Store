@@ -61,6 +61,8 @@ export interface Product {
   images: ProductImage[];
   variants?: ProductVariant[];
   trackInventory?: boolean;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

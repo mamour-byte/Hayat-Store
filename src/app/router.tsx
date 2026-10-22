@@ -11,11 +11,13 @@ const ProductDetailPage = lazy(() => import('../features/products/pages/ProductD
 const CartPage = lazy(() => import('../features/cart/pages/CartPage').then((m) => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import('../features/checkout/pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
 const CheckoutSuccessPage = lazy(() => import('../features/checkout/pages/CheckoutSuccessPage').then((m) => ({ default: m.CheckoutSuccessPage })));
+const CheckoutFailedPage = lazy(() => import('../features/checkout/pages/CheckoutFailedPage').then((m) => ({ default: m.CheckoutFailedPage })));
 const MyOrdersPage = lazy(() => import('../features/orders/pages/MyOrdersPage').then((m) => ({ default: m.MyOrdersPage })));
 const LoginPage = lazy(() => import('../features/auth/pages/LoginPage').then((m) => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('../features/auth/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = lazy(() => import('../features/auth/pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = lazy(() => import('../features/auth/pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
+const AppleCallbackPage = lazy(() => import('../features/auth/pages/AppleCallbackPage').then((m) => ({ default: m.AppleCallbackPage })));
 const ProfilePage = lazy(() => import('../features/account/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const ContactPage = lazy(() => import('../pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 
@@ -53,11 +55,13 @@ export const router = createBrowserRouter([
       { path: 'cart', element: withSuspense(<CartPage />) },
       { path: 'checkout', element: withSuspense(<CheckoutPage />) },
       { path: 'checkout/success', element: withSuspense(<CheckoutSuccessPage />) },
+      { path: 'checkout/failed', element: withSuspense(<CheckoutFailedPage />) },
       { path: 'contact', element: withSuspense(<ContactPage />) },
       { path: 'login', element: withSuspense(<LoginPage />) },
       { path: 'register', element: withSuspense(<RegisterPage />) },
       { path: 'forgot-password', element: withSuspense(<ForgotPasswordPage />) },
       { path: 'reset-password', element: withSuspense(<ResetPasswordPage />) },
+      { path: 'auth/apple/callback', element: withSuspense(<AppleCallbackPage />) },
       {
         path: 'account',
         element: <ProtectedRoute allowedRoles={[UserRole.CUSTOMER, UserRole.ADMIN, UserRole.STAFF]} />,

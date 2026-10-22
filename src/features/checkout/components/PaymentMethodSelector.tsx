@@ -1,5 +1,5 @@
 import React from 'react';
-import { Banknote, Lock } from 'lucide-react';
+import { Banknote, Lock, Wallet } from 'lucide-react';
 import { PaymentProvider } from '../../../types/enums';
 
 interface PaymentMethodSelectorProps {
@@ -9,20 +9,12 @@ interface PaymentMethodSelectorProps {
 
 const METHODS = [
   {
-    provider: PaymentProvider.WAVE,
-    label: 'Wave',
-    description: 'Bientôt disponible',
-    icon: "./assets/wave.jpeg",
-    color: 'from-blue-400 to-blue-500',
-    disabled: true,
-  },
-  {
-    provider: PaymentProvider.ORANGE_MONEY,
-    label: 'Orange Money',
-    description: 'Bientôt disponible',
-    icon: "./assets/om.png",
-    color: 'from-orange-400 to-orange-500',
-    disabled: true,
+    provider: PaymentProvider.BICTORYS,
+    label: 'Mobile Money / Carte bancaire',
+    description: 'Wave , Orange Money, Carte bancaire',
+    icon: <Wallet className="w-6 h-6" />,
+    color: 'from-[#2563eb] to-[#1d4ed8]',
+    disabled: false,
   },
   {
     provider: PaymentProvider.CASH_ON_DELIVERY,

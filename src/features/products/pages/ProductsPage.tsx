@@ -7,6 +7,7 @@ import { ProductFilters } from '../components/ProductFilters';
 import type { ProductQueryParams } from '../../../types';
 import { trackingSearch } from '../../marketing/tracking';
 import { Button } from '../../../components/ui/Button';
+import { useSeo } from '../../../hooks/useSeo';
 
 export const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,6 +22,13 @@ export const ProductsPage: React.FC = () => {
   });
 
   const { data, isLoading } = useProducts(filters);
+
+  useSeo({
+    title: 'Catalogue',
+    description:
+      'Découvrez tous les produits Hayat Store : électronique, maison, beauté et plus. Livraison rapide partout au Sénégal, paiement Wave et Orange Money.',
+    noindex: !!filters.search || !!filters.categoryId || !!filters.brandId,
+  });
 
   // Report the search with its result count, once the query resolves. Repeats
   // inside the same visit are filtered out downstream.

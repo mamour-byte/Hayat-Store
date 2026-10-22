@@ -43,6 +43,7 @@ export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 export const PaymentProvider = {
   WAVE: 'WAVE',
   ORANGE_MONEY: 'ORANGE_MONEY',
+  BICTORYS: 'BICTORYS',
   PAYTECH: 'PAYTECH',
   INTOUCH: 'INTOUCH',
   CASH_ON_DELIVERY: 'CASH_ON_DELIVERY',

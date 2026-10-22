@@ -52,6 +52,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [handleAuthResponse]
   );
 
+  const loginWithSocial = useCallback(
+    async (data: AuthResponse) => {
+      await handleAuthResponse(data);
+      toast.success(`Bienvenue ${data.user.firstName || data.user.email} !`);
+    },
+    [handleAuthResponse]
+  );
+
   const logout = useCallback(async () => {
     try {
       const refreshToken = tokenStorage.getRefreshToken();
@@ -89,8 +97,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const contextValue = useMemo<AuthContextValue>(
-    () => ({ user, isAuthenticated, isLoading, login, register, logout }),
-    [user, isAuthenticated, isLoading, login, register, logout]
+    () => ({ user, isAuthenticated, isLoading, login, register, logout, loginWithSocial }),
+    [user, isAuthenticated, isLoading, login, register, logout, loginWithSocial]
   );
 
   return (
