@@ -52,7 +52,7 @@ export interface Order {
 
 export interface CreateOrderCartPayload {
   cartId: string;
-  customerEmail: string;
+  customerEmail?: string;
   customerPhone: string;
   shippingFirstName?: string;
   shippingLastName?: string;
@@ -73,7 +73,7 @@ export interface CreateOrderDirectPayload {
     variantId?: string;
     quantity: number;
   }[];
-  customerEmail: string;
+  customerEmail?: string;
   customerPhone: string;
   shippingFirstName?: string;
   shippingLastName?: string;
