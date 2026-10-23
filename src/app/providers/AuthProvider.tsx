@@ -60,6 +60,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [handleAuthResponse]
   );
 
+  const updateUser = useCallback((updated: User) => {
+    setUser(updated);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       const refreshToken = tokenStorage.getRefreshToken();
@@ -97,8 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const contextValue = useMemo<AuthContextValue>(
-    () => ({ user, isAuthenticated, isLoading, login, register, logout, loginWithSocial }),
-    [user, isAuthenticated, isLoading, login, register, logout, loginWithSocial]
+    () => ({ user, isAuthenticated, isLoading, login, register, logout, loginWithSocial, updateUser }),
+    [user, isAuthenticated, isLoading, login, register, logout, loginWithSocial, updateUser]
   );
 
   return (

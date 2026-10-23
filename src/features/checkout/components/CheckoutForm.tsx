@@ -20,7 +20,7 @@ import { PaymentProvider } from '../../../types/enums';
 import type { DeliveryMethod, DeliveryNeighborhood } from '../../../types';
 
 const schema = z.object({
-  customerEmail: z.string().email('Email invalide'),
+  customerEmail: z.string().email('Email invalide').optional().or(z.literal('')),
   customerPhone: z.string().min(8, 'Téléphone requis'),
   shippingFirstName: z.string().min(2, 'Prénom requis'),
   shippingLastName: z.string().min(2, 'Nom requis'),
@@ -100,7 +100,7 @@ export const CheckoutForm: React.FC = () => {
     try {
       const order = await createOrder({
         cartId: cart.id,
-        customerEmail: formData.customerEmail,
+        customerEmail: formData.customerEmail || undefined,
         customerPhone: formData.customerPhone,
         shippingFirstName: formData.shippingFirstName,
         shippingLastName: formData.shippingLastName,
@@ -160,7 +160,7 @@ export const CheckoutForm: React.FC = () => {
                   <Input label="Prénom" error={errors.shippingFirstName?.message} {...register('shippingFirstName')} />
                   <Input label="Nom" error={errors.shippingLastName?.message} {...register('shippingLastName')} />
                 </div>
-                <Input label="Email" type="email" error={errors.customerEmail?.message} {...register('customerEmail')} />
+                <Input label="Email (optionnel)" type="email" placeholder="Pour recevoir votre confirmation de commande" error={errors.customerEmail?.message} {...register('customerEmail')} />
                 <Input label="Téléphone" type="tel" placeholder="+221 77 000 00 00" error={errors.customerPhone?.message} {...register('customerPhone')} />
               </div>
 
