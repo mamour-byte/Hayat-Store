@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart,
-  Search,
   User,
   LogOut,
   Package,
@@ -14,8 +13,8 @@ import { useAuth } from '../app/providers/auth-context';
 import { useCart } from '../app/providers/cart-context';
 import { CartDrawer } from '../features/cart/components/CartDrawer';
 import { TrackingProvider } from '../features/marketing/tracking';
-import { Input } from '../components/ui/Input';
 import { ScrollToTop } from '../components/common/ScrollToTop';
+import { SearchBar } from '../components/common/SearchBar';
 
 export const MainLayout: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -25,15 +24,6 @@ export const MainLayout: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-    }
-  };
 
   const handleLogout = async () => {
     setIsUserMenuOpen(false);
@@ -65,19 +55,8 @@ export const MainLayout: React.FC = () => {
               <Link to="/contact" className="hover:text-[#008060] transition-colors">Contact</Link>
             </nav>
 
-            {/* Search */}
-            <form onSubmit={handleSearch} className="flex-1 max-w-md hidden sm:block">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6d7175] pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                  placeholder="Rechercher un produit..."
-                  className="w-full pl-9 pr-4 py-1.5 rounded-lg border border-[#e1e3e5] bg-[#f6f6f7] text-sm text-[#1a1a1a] placeholder:text-[#8c9196] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#008060]/30 focus:border-[#008060] transition-all"
-                />
-              </div>
-            </form>
+            {/* Search — desktop */}
+            <SearchBar className="flex-1 max-w-md hidden sm:block" />
 
             {/* Right Actions */}
             <div className="flex items-center gap-3">
@@ -156,17 +135,14 @@ export const MainLayout: React.FC = () => {
             </div>
           </div>
 
+          {/* Search — mobile bar (always visible, below header) */}
+          <div className="sm:hidden px-3 py-2 border-t border-[#e1e3e5]">
+            <SearchBar onNavigate={() => setIsMobileMenuOpen(false)} />
+          </div>
+
           {/* Mobile menu */}
           {isMobileMenuOpen && (
             <div className="md:hidden py-3 border-t border-[#e1e3e5] space-y-2">
-              <form onSubmit={handleSearch} className="px-2 pb-2">
-                <Input
-                  placeholder="Rechercher un produit..."
-                  value={searchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                  leftIcon={<Search className="w-4 h-4" />}
-                />
-              </form>
               <Link to="/products" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 text-sm font-medium text-[#1a1a1a] hover:bg-[#f6f6f7] rounded-lg">
                 Catalogue produits
               </Link>

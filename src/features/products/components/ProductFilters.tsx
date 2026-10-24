@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import type { ProductQueryParams } from '../../../types';
 import { useCategories, useBrands } from '../api/useProducts';
 import { Input } from '../../../components/ui/Input';
@@ -38,14 +38,6 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({ params, onChange
           </button>
         )}
       </div>
-
-      {/* Search */}
-      <Input
-        placeholder="Rechercher..."
-        leftIcon={<Search className="w-4 h-4" />}
-        value={params.search ?? ''}
-        onChange={(e) => update('search', e.target.value)}
-      />
 
       {/* Category */}
       <div className="space-y-2">
