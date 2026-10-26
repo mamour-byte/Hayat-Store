@@ -32,7 +32,9 @@ export const CheckoutSuccess: React.FC = () => {
   const isPaid = !isCashOnDelivery && status?.paid === true;
   const isFailed =
     !isCashOnDelivery &&
-    (status?.paymentStatus === 'FAILED' || status?.paymentStatus === 'CANCELLED');
+    (status?.paymentStatus === 'FAILED' ||
+      status?.paymentStatus === 'EXPIRED' ||
+      status?.paymentStatus === 'CANCELLED');
   const isPending =
     !isCashOnDelivery && !isPaid && !isFailed && !isError;
 

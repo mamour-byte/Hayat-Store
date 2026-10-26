@@ -89,6 +89,8 @@ export const AdminOrdersPage: React.FC = () => {
         return <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-[11px] font-bold border border-purple-200">Remboursé</span>;
       case PaymentStatus.FAILED:
         return <span className="bg-rose-50 text-rose-700 px-2 py-0.5 rounded text-[11px] font-bold border border-rose-200">Échoué</span>;
+      case PaymentStatus.EXPIRED:
+        return <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[11px] font-bold border border-gray-200">Expiré</span>;
       default:
         return <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-bold">{status}</span>;
     }
@@ -254,6 +256,7 @@ export const AdminOrdersPage: React.FC = () => {
                               <option value={PaymentStatus.PAID}>Payé</option>
                               <option value={PaymentStatus.REFUNDED}>Remboursé</option>
                               <option value={PaymentStatus.FAILED}>Échoué</option>
+                              <option value={PaymentStatus.EXPIRED}>Expiré</option>
                             </select>
                           );
                         })()}

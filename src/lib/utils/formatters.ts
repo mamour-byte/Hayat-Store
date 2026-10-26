@@ -41,6 +41,8 @@ export const getPaymentStatusBadge = (status: PaymentStatus) => {
       return { label: 'Traitement en cours', className: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' };
     case PaymentStatus.FAILED:
       return { label: 'Échec', className: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' };
+    case PaymentStatus.EXPIRED:
+      return { label: 'Paiement expiré', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' };
     case PaymentStatus.CANCELLED:
       return { label: 'Annulé', className: 'bg-gray-100 text-gray-800' };
     default:

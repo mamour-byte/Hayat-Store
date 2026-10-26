@@ -60,7 +60,7 @@ export const useCheckoutStatus = (orderId?: string | null, orderNumber?: string 
     // On continue d'interroger le serveur tant que le paiement n'est pas définitif.
     refetchInterval: (query) => {
       const status = query.state.data?.paymentStatus;
-      return status === 'PAID' || status === 'FAILED' || status === 'CANCELLED' ? false : 4000;
+      return status === 'PAID' || status === 'FAILED' || status === 'EXPIRED' || status === 'CANCELLED' ? false : 4000;
     },
     retry: 2,
   });

@@ -33,7 +33,9 @@ export const CheckoutFailed: React.FC = () => {
 
   const isPaid = status?.paid === true;
   const isFailed =
-    status?.paymentStatus === 'FAILED' || status?.paymentStatus === 'CANCELLED';
+    status?.paymentStatus === 'FAILED' ||
+    status?.paymentStatus === 'EXPIRED' ||
+    status?.paymentStatus === 'CANCELLED';
   const isPending = !isPaid && !isFailed;
 
   const handleVerify = async () => {
