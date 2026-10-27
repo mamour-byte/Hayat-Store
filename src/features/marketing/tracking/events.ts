@@ -2,7 +2,7 @@ import { TrackingEventName } from '../../../types/enums';
 import type { TrackingEventInput } from '../../../types';
 import { trackPixelEvent } from '../pixel';
 import { trackingApi } from './client';
-import { getMetaCookies } from './capture';
+import { getMetaCookies, getTikTokCookie } from './capture';
 import { getSessionKey } from './storage';
 
 /** The API rejects batches larger than 50 events. */
@@ -95,6 +95,7 @@ export const flushEvents = async (): Promise<void> => {
   context = { ...context, sessionKey };
 
   const metaCookies = getMetaCookies();
+  const ttp = getTikTokCookie();
 
   isFlushing = true;
   try {
@@ -107,6 +108,7 @@ export const flushEvents = async (): Promise<void> => {
         sessionKey,
         ...(context.userId ? { userId: context.userId } : {}),
         ...metaCookies,
+        ...(ttp ? { ttp } : {}),
         events: batch,
       });
     }

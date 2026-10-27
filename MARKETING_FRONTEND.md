@@ -14,6 +14,10 @@ VITE_API_URL=http://localhost:3000/api
 VITE_SITE_URL=http://localhost:5173
 ```
 
+Le Pixel TikTok est chargé dans `index.html`; les événements de navigation et
+de commerce sont émis par le fournisseur de tracking avec un identifiant commun
+au navigateur et à l'API pour la déduplication.
+
 ---
 
 ## 2. Identifiants de session (obligatoires)
@@ -83,6 +87,7 @@ Body :
   msclkid?: string;
   fbc?: string;             // _fbc cookie Meta
   fbp?: string;             // _fbp cookie Meta
+  ttp?: string;             // _ttp cookie TikTok
   consentGranted: boolean;
 }
 ```
@@ -137,6 +142,7 @@ Appeler sur route change (SPA).
   lastName?: string;
   city?: string;
   country?: string;     // 'SN'
+  ttp?: string;         // _ttp cookie TikTok
   fbc?: string;
   fbp?: string;
 }
@@ -334,6 +340,12 @@ Query : `startDate,endDate`
 - Toujours démarrer session avant événements SPA
 - Utiliser `eventId` déterministe (évite doublons CAPI)
 - Ne pas envoyer `PURCHASE` front (serveur uniquement)
+- Configurer `TIKTOK_PIXEL_ID` et `TIKTOK_ACCESS_TOKEN` côté API pour activer
+  TikTok Events API; le jeton ne doit jamais être exposé au frontend.
+- Email, téléphone et identifiant externe sont normalisés puis hashés SHA-256
+  pour TikTok Events API; le matching navigateur utilise l'identification du pixel.
+- Le nom et l'adresse postale ne sont pas envoyés par cette intégration, car ils
+  ne font pas partie des champs utilisateur utilisés par TikTok Events API.
 - Identifier utilisateur à la connexion (advanced matching)
 - Conserver `x-session-id` sur tous les appels cart/order
 - Respect consent (Consent Mode v2 à prévoir si besoin RGPD)
@@ -352,3 +364,4 @@ Importer `AdDailyStat` (CSV quotidien Meta/Google) : `date`, `campaignId/externa
 - Attribution : `lastTouchPlatform/campaign` sur Order (server-side)
 - Purchase CAPI : envoyé sur paiement/livraison selon logique (ici à l'appel tracking purchase côté service Order)
 - Retry Meta CAPI : cron 5min (max 10 tentatives exponentielles)
+- Retry TikTok Events API : cron 5min (max 10 tentatives exponentielles)

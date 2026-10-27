@@ -67,6 +67,12 @@ export const getMetaCookies = (): Pick<TrackingCapture, 'fbc' | 'fbp'> => {
   };
 };
 
+/** TikTok's first-party matching cookie. */
+export const getTikTokCookie = (): string | undefined => {
+  const ttp = getCookie('_ttp');
+  return isNonEmptyString(ttp) ? truncate(ttp) : undefined;
+};
+
 const captureFromSearchParams = (params: URLSearchParams): TrackingCapture => {
   const capture: TrackingCapture = {};
 
@@ -129,11 +135,13 @@ export const getTrackingCapture = (): TrackingCapture => {
 
   const fromUrl = captureFromSearchParams(search);
   persistCapture(fromUrl);
+  const ttp = getTikTokCookie();
 
   return {
     ...readPersistedCapture(),
     ...fromUrl,
     ...getMetaCookies(),
+    ...(ttp ? { ttp } : {}),
   };
 };
 

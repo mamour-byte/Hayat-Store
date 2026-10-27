@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/auth-context';
-import { trackPixelPageView } from '../pixel';
+import { identifyTikTokPixel, trackPixelPageView } from '../pixel';
 import { trackingApi } from './client';
 import {
   getTrackingCapture,
   getLandingContext,
   getMetaCookies,
+  getTikTokCookie,
 } from './capture';
 import { flushEvents, setTrackingSession, setTrackingUser } from './events';
 import {
@@ -115,8 +116,14 @@ export const TrackingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     setTrackingUser(user.id);
+    identifyTikTokPixel({
+      externalId: user.id,
+      ...(user.email ? { email: user.email } : {}),
+      ...(user.phone ? { phone: user.phone } : {}),
+    });
 
     const sessionKey = sessionRef.current ?? getSessionKey();
+    const ttp = getTikTokCookie();
     void trackingApi.identify({
       anonymousId: getAnonymousId(),
       sessionKey,
@@ -125,6 +132,7 @@ export const TrackingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ...(user.phone ? { phone: user.phone } : {}),
       ...(user.firstName ? { firstName: user.firstName } : {}),
       ...(user.lastName ? { lastName: user.lastName } : {}),
+      ...(ttp ? { ttp } : {}),
       ...getMetaCookies(),
     });
   }, [user]);

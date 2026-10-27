@@ -20,7 +20,7 @@ export type UtmKey =
   | 'utm_term'
   | 'utm_id';
 
-/** UTM / click identifiers read from the landing URL, plus Meta cookies. */
+/** UTM / click identifiers read from the landing URL, plus pixel cookies. */
 export interface TrackingCapture {
   utmSource?: string;
   utmMedium?: string;
@@ -33,6 +33,7 @@ export interface TrackingCapture {
   gbraid?: string;
   wbraid?: string;
   ttclid?: string;
+  ttp?: string;
   msclkid?: string;
   fbc?: string;
   fbp?: string;
@@ -63,7 +64,7 @@ export interface TrackingSessionResponse {
   };
 }
 
-export interface IdentifyPayload extends Pick<TrackingCapture, 'fbc' | 'fbp'> {
+export interface IdentifyPayload extends Pick<TrackingCapture, 'fbc' | 'fbp' | 'ttp'> {
   anonymousId: string;
   sessionKey?: string;
   userId?: string;
@@ -110,6 +111,7 @@ export interface TrackEventsPayload {
   userId?: string;
   fbp?: string;
   fbc?: string;
+  ttp?: string;
   events: TrackingEventInput[];
 }
 
