@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Home, Package, Search } from 'lucide-react';
+import { Home, Package, Search } from 'lucide-react';
 import { useSeo } from '../hooks/useSeo';
 
 export const NotFoundPage: React.FC = () => {
@@ -11,14 +11,6 @@ export const NotFoundPage: React.FC = () => {
       "Cette page semble s'être perdue. Retrouvez tous vos produits sur Hayat Store.",
     noindex: true,
   });
-
-  const handleGoBack = () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.href = '/';
-    }
-  };
 
   return (
     <main className="min-h-[75vh] flex items-center justify-center px-4 py-12 sm:py-16 bg-white">
