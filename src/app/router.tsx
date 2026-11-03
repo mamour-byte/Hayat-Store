@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { ProtectedRoute } from '../layouts/ProtectedRoute';
@@ -20,6 +20,7 @@ const ResetPasswordPage = lazy(() => import('../features/auth/pages/ResetPasswor
 const AppleCallbackPage = lazy(() => import('../features/auth/pages/AppleCallbackPage').then((m) => ({ default: m.AppleCallbackPage })));
 const ProfilePage = lazy(() => import('../features/account/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const ContactPage = lazy(() => import('../pages/ContactPage').then((m) => ({ default: m.ContactPage })));
+const NotFoundPage = lazy(() => import('../pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
 
 const AdminDashboardPage = lazy(() => import('../features/admin/pages/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })));
 const AdminOrdersPage = lazy(() => import('../features/admin/pages/AdminOrdersPage').then((m) => ({ default: m.AdminOrdersPage })));
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
       { path: 'checkout/success', element: withSuspense(<CheckoutSuccessPage />) },
       { path: 'checkout/failed', element: withSuspense(<CheckoutFailedPage />) },
       { path: 'contact', element: withSuspense(<ContactPage />) },
+      { path: '404', element: withSuspense(<NotFoundPage />) },
       { path: 'login', element: withSuspense(<LoginPage />) },
       { path: 'register', element: withSuspense(<RegisterPage />) },
       { path: 'forgot-password', element: withSuspense(<ForgotPasswordPage />) },
@@ -70,6 +72,7 @@ export const router = createBrowserRouter([
           { path: 'orders', element: withSuspense(<MyOrdersPage />) },
         ],
       },
+      { path: '*', element: withSuspense(<NotFoundPage />) },
     ],
   },
   {
@@ -93,5 +96,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  { path: '*', element: <Navigate to="/" replace /> },
 ]);

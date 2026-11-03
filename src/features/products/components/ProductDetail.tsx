@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { ShoppingCart, Minus, Plus, Package, Tag, ChevronLeft } from 'lucide-react';
+import { Navigate, useParams } from 'react-router-dom';
+import { ShoppingCart, Minus, Plus, Package, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProductBySlug } from '../api/useProducts';
 import { VariantSelector } from './VariantSelector';
@@ -81,17 +81,7 @@ export const ProductDetail: React.FC = () => {
   }
 
   if (isError || !product) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
-        <Package className="w-16 h-16 text-[#1a1a1a]" />
-        <h2 className="text-xl font-semibold text-[#1a1a1a]">
-          Produit introuvable
-        </h2>
-        <button onClick={() => history.back()} className="flex items-center gap-2 text-emerald-600 hover:underline cursor-pointer">
-          <ChevronLeft className="w-4 h-4" /> Retour
-        </button>
-      </div>
-    );
+    return <Navigate to="/404" replace />;
   }
 
   const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
