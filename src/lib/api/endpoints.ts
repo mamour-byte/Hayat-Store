@@ -113,4 +113,12 @@ export const API_ENDPOINTS = {
     FUNNEL: '/marketing/funnel',
     TIMELINE: '/marketing/timeline',
   },
+  AI_ASSISTANT: {
+    CHAT: '/ai-assistant/chat',
+    VOICE: '/ai-assistant/voice',
+    CONVERSATIONS: '/ai-assistant/conversations',
+    CONVERSATION: (id: string) => `/ai-assistant/conversations/${encodeURIComponent(id)}`,
+    STATUS: '/ai-assistant/status',
+    INTENT_STATS: '/ai-assistant/stats/intents',
+  },
 };

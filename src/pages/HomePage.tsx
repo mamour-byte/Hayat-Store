@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import Slider from '../components/layout/Slider';
 import type { SlideItem } from '../components/layout/Slider';
 import { useSeo } from '../hooks/useSeo';
+import { AssistantWidget } from '../features/ai-assistant/components/AssistantWidget';
 
 const sliderItems: SlideItem[] = [
   {
@@ -141,6 +142,8 @@ export const HomePage: React.FC = () => {
         </div>
         <ProductGrid products={featuredProducts?.data} isLoading={isLoading} />
       </section>
+
+      <AssistantWidget />
     </div>
   );
 };

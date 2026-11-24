@@ -8,6 +8,7 @@ import type { ProductQueryParams } from '../../../types';
 import { trackingSearch } from '../../marketing/tracking';
 import { Button } from '../../../components/ui/Button';
 import { useSeo } from '../../../hooks/useSeo';
+import { AssistantWidget } from '../../ai-assistant/components/AssistantWidget';
 
 export const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -139,6 +140,14 @@ export const ProductsPage: React.FC = () => {
           </div>
         </>
       )}
+
+      <AssistantWidget
+        initialSuggestions={[
+          'Voir les nouveautés',
+          'Quels produits sont en stock ?',
+          'Où en est ma commande ?',
+        ]}
+      />
     </div>
   );
 };

@@ -1,0 +1,629 @@
+/* ───────── Assistant orbe flottant : styles ───────── */
+/* L'assistant reprend la charte Hayat Store (Shopify-like) :
+   vert #008060, mint #f0f9f6, surfaces blanches, textes #1a1a1a / #6d7175. */
+.mo-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  color-scheme: light;
+  font-family: inherit;
+
+  --mo-brand: var(--brand-green, #008060);
+  --mo-brand-hover: var(--brand-green-hover, #006e52);
+  --mo-brand-soft: #f0f9f6;
+  --mo-brand-accent: #68d5b3;
+  --mo-brand-tint: rgba(0, 128, 96, 0.08);
+  --mo-brand-line: rgba(0, 128, 96, 0.25);
+  --mo-surface: var(--bg-surface, #ffffff);
+  --mo-bg: var(--bg-light, #f6f6f7);
+  --mo-border: var(--border-subtle, #e1e3e5);
+  --mo-text: var(--text-primary, #1a1a1a);
+  --mo-muted: var(--text-secondary, #6d7175);
+  --mo-danger: #d82c0d;
+
+  --oCenter: 0;
+  --oScrim: 0;
+  --ch: 108px;
+}
+
+/* voile derrière l'assistant ouvert (clic = fermer) */
+.mo-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 46%,
+    rgba(246, 246, 247, 0.74),
+    rgba(246, 246, 247, 0.94)
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: var(--oScrim);
+  pointer-events: none;
+}
+.mo-root[data-phase="idle"] .mo-bg,
+.mo-root[data-phase="answered"] .mo-bg { pointer-events: auto; }
+
+.mo-halo {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 520px;
+  height: 520px;
+  translate: -50% -50%;
+  background: radial-gradient(closest-side, rgba(0, 128, 96, 0.12), transparent);
+  opacity: var(--oCenter);
+}
+
+.mo-mover {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 0;
+  height: 0;
+  will-change: transform;
+}
+
+.mo-trail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--mo-brand-accent), var(--mo-brand) 70%);
+  filter: blur(1px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ───────── acteur : pastille → champ → orbe → carte ───────── */
+.mo-actor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--w, 60px);
+  height: var(--h, 60px);
+  border-radius: var(--r, 999px);
+  translate: -50% -50%;
+  transform: scale(var(--cs, 1));
+  color: var(--mo-text);
+  --oFab: 1;
+  --oInput: 0;
+  --oPill: 1;
+  --oRing: 1;
+  --oGlow: 1;
+  --oAur: 1;
+  --inScale: 1;
+}
+.mo-actor > * { border-radius: inherit; }
+
+.mo-actor[data-shake] { animation: moShake 0.26s; }
+@keyframes moShake {
+  0%, 100% { transform: scale(var(--cs, 1)) translateX(0); }
+  20% { transform: scale(var(--cs, 1)) translateX(-6px); }
+  40% { transform: scale(var(--cs, 1)) translateX(6px); }
+  60% { transform: scale(var(--cs, 1)) translateX(-4px); }
+  80% { transform: scale(var(--cs, 1)) translateX(4px); }
+}
+
+.mo-underglow {
+  position: absolute;
+  inset: 0;
+  box-shadow: 0 10px 30px rgba(26, 26, 26, 0.10), 0 0 24px rgba(0, 128, 96, 0.14);
+  opacity: var(--oGlow);
+  transition: box-shadow 0.3s;
+}
+.mo-actor[data-typing] .mo-underglow {
+  box-shadow: 0 10px 30px rgba(26, 26, 26, 0.10), 0 0 30px rgba(0, 128, 96, 0.28);
+}
+.mo-root[data-phase="dock"] .mo-underglow { animation: moBreath 3.4s ease-in-out infinite; }
+@keyframes moBreath {
+  0%, 100% { box-shadow: 0 8px 22px rgba(26, 26, 26, 0.10), 0 0 12px rgba(0, 128, 96, 0.16); }
+  50% { box-shadow: 0 8px 26px rgba(26, 26, 26, 0.14), 0 0 28px rgba(0, 128, 96, 0.32); }
+}
+
+.mo-halo-green {
+  position: absolute;
+  inset: -22px;
+  background: radial-gradient(closest-side, rgba(104, 213, 179, 0.5), transparent);
+  filter: blur(14px);
+  opacity: var(--oHalo, 0);
+  pointer-events: none;
+}
+
+.mo-surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--mo-border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  opacity: var(--oPill);
+}
+.mo-aurora { position: absolute; inset: 0; opacity: var(--oAur); filter: blur(14px) saturate(1.1); }
+.mo-aurora i {
+  position: absolute;
+  width: 60%;
+  height: 140%;
+  border-radius: 50%;
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+}
+.mo-aurora i:nth-child(1) { left: -10%; top: -25%; background: #008060; animation: moDriftA 7s ease-in-out infinite alternate; }
+.mo-aurora i:nth-child(2) { right: -12%; top: -10%; background: #68d5b3; animation: moDriftB 9s ease-in-out infinite alternate; }
+.mo-aurora i:nth-child(3) { left: 25%; bottom: -40%; background: var(--mo-brand-hover); animation: moDriftA 11s ease-in-out infinite alternate-reverse; }
+.mo-aurora i:nth-child(4) { left: 40%; top: -40%; width: 30%; background: var(--mo-brand-hover); animation: moDriftB 8s ease-in-out infinite alternate-reverse; }
+@keyframes moDriftA { to { transform: translate(18%, 12%) scale(1.15); } }
+@keyframes moDriftB { to { transform: translate(-20%, 12%) scale(0.9); } }
+
+.mo-ball {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #cdcecf, #9aa0a6 60%, #838688);
+  box-shadow: 0 6px 18px rgba(26, 26, 26, 0.22);
+  opacity: var(--oBall, 0);
+}
+.mo-green {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg, var(--mo-brand-accent), var(--mo-brand) 55%, var(--mo-brand-hover));
+  opacity: var(--oGreen, 0);
+  transform: scale(var(--gs, 0.55));
+}
+.mo-card {
+  position: absolute;
+  inset: 0;
+  background: var(--mo-surface);
+  border: 1px solid var(--mo-border);
+  box-shadow: 0 24px calc(70px * var(--bloom, 1)) rgba(0, 128, 96, 0.12), 0 12px 30px rgba(26, 26, 26, 0.10);
+  opacity: var(--oCard, 0);
+}
+.mo-ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--mo-brand-line);
+  opacity: var(--oRing);
+  pointer-events: none;
+  transition: border-color 0.2s;
+}
+.mo-actor[data-flash] .mo-ring { border-color: rgba(216, 44, 13, 0.65); }
+
+/* ───────── bouton flottant (état replié) ───────── */
+.mo-fab {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 3px solid #ffffff;               /* anneau blanc : détache le bouton de n'importe quel fond */
+  background: linear-gradient(145deg, var(--mo-brand), var(--mo-brand-hover));
+  color: #ffffff;
+  cursor: pointer;
+  opacity: var(--oFab);
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px var(--mo-brand-line),
+    0 12px 28px rgba(0, 128, 96, 0.45),
+    0 2px 6px rgba(26, 26, 26, 0.18);
+  -webkit-tap-highlight-color: transparent;
+}
+.mo-root[data-phase="dock"] .mo-fab { pointer-events: auto; }
+
+/* onde discrète pour attirer l'œil, uniquement quand le bouton est replié */
+.mo-fab::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--mo-brand-accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.mo-root[data-phase="dock"] .mo-fab::after { animation: moFabPing 2.6s ease-out infinite; }
+@keyframes moFabPing {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  80%, 100% { transform: scale(1.6); opacity: 0; }
+}
+
+.mo-fab svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 1.9;                       /* trait plus épais = icône plus lisible */
+  transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.mo-fab:hover svg { transform: scale(1.12) rotate(8deg); }
+.mo-fab:active svg { transform: scale(0.92); }
+.mo-fab:focus-visible { outline: 2px solid var(--mo-brand); outline-offset: 4px; }
+
+/* ───────── champ de saisie ───────── */
+.mo-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 18px;
+  opacity: var(--oInput);
+  transform: scale(var(--inScale));
+  pointer-events: none;
+}
+.mo-root[data-phase="idle"] .mo-input { pointer-events: auto; }
+.mo-spark { flex: none; width: 20px; height: 20px; color: white; margin-right: 4px; }
+.mo-field {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--mo-text);
+  font: inherit;
+  font-size: 16px;
+}
+.mo-field::placeholder { color: var(--mo-muted); }
+
+.mo-btn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--mo-muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mo-btn svg { width: 20px; height: 20px; }
+.mo-btn:hover { background: var(--mo-brand-tint); color: var(--mo-brand); }
+.mo-btn:active { transform: scale(0.92); }
+.mo-btn:focus-visible { outline: 2px solid var(--mo-brand); outline-offset: 1px; }
+.mo-send { background: var(--mo-bg); color: var(--mo-muted); }
+.mo-send[data-ready] { background: var(--mo-brand); color: #ffffff; }
+.mo-send[data-ready]:hover { background: var(--mo-brand-hover); color: #ffffff; }
+.mo-btn:disabled { opacity: 0.45; cursor: default; }
+.mo-field:disabled { color: var(--mo-muted); }
+
+/* ───────── enregistrement vocal ───────── */
+.mo-rec {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
+  z-index: 4;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--mo-surface);
+  border: 1px solid rgba(216, 44, 13, 0.28);
+  box-shadow: 0 6px 18px rgba(26, 26, 26, 0.10);
+}
+/* `.mo-root` est en `pointer-events: none` : la barre doit réactiver les clics,
+   sinon ni « envoyer » ni « annuler » ne répondent. */
+.mo-actor[data-rec] .mo-rec { display: flex; pointer-events: auto; }
+.mo-actor[data-rec] .mo-field,
+.mo-actor[data-rec] .mo-mic,
+.mo-actor[data-rec] .mo-send,
+.mo-actor[data-rec] .mo-spark { visibility: hidden; }
+.mo-actor[data-rec] .mo-composer { visibility: hidden; }
+.mo-rec-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--mo-danger); animation: moRec 1s ease-in-out infinite; }
+@keyframes moRec { 50% { opacity: 0.3; } }
+.mo-rec-time { flex: none; min-width: 38px; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--mo-text); }
+.mo-bars { flex: 1; min-width: 0; height: 28px; display: flex; align-items: center; gap: 3px; overflow: hidden; }
+.mo-bars i {
+  flex: 1;
+  max-width: 4px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--mo-brand);
+  transform: scaleY(0.15);
+  transition: transform 90ms linear;
+}
+/* Envoi du message vocal pendant l'enregistrement. */
+.mo-rec .mo-rec-send {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  background: var(--mo-brand);
+  color: #ffffff;
+}
+.mo-rec .mo-rec-send:hover:not(:disabled) { background: var(--mo-brand-hover); color: #ffffff; }
+
+/* ───────── orbe, pulsation, carte réponse ───────── */
+.mo-orb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220px;
+  height: 220px;
+  translate: -50% -50%;
+  pointer-events: none;
+  border-radius: 0;
+}
+.mo-pulse {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--mo-brand);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+.mo-answer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 12px;
+  overflow: hidden;
+  outline: 0;
+  color: var(--mo-text);
+  opacity: var(--oCard, 0);
+  pointer-events: none;
+}
+.mo-root[data-phase="answered"] .mo-answer,
+.mo-root[data-phase="thinking"] .mo-answer { pointer-events: auto; }
+.mo-a-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+  font-size: 13px;
+  color: var(--mo-muted);
+  opacity: var(--hOp, 0);
+}
+.mo-a-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--mo-brand); transform: scale(var(--dotS, 0)); box-shadow: 0 0 12px rgba(0, 128, 96, 0.55); }
+.mo-a-conv { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--mo-brand); }
+.mo-a-new {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--mo-border);
+  border-radius: 999px;
+  background: var(--mo-surface);
+  color: var(--mo-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mo-a-new:hover:not(:disabled) { background: var(--mo-brand-soft); border-color: var(--mo-brand-line); color: var(--mo-brand); }
+.mo-a-new:disabled { opacity: 0.45; cursor: default; }
+.mo-a-new:focus-visible { outline: 2px solid var(--mo-brand); outline-offset: 2px; }
+
+/* Transcript scrollable : plusieurs messages, fiches produits et suggestions. */
+.mo-transcript {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 4px 4px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mo-brand-line) transparent;
+}
+.mo-transcript::-webkit-scrollbar { width: 6px; }
+.mo-transcript::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--mo-brand-line); }
+.mo-msg { display: flex; width: 100%; }
+.mo-msg-user { justify-content: flex-end; }
+.mo-msg-assistant { justify-content: flex-start; }
+.mo-bubble {
+  max-width: 88%;
+  padding: 10px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--mo-text);
+  overflow-wrap: anywhere;
+}
+.mo-msg-user .mo-bubble {
+  border-bottom-right-radius: 5px;
+  background: linear-gradient(135deg, var(--mo-brand), var(--mo-brand-hover));
+  color: #ffffff;
+}
+.mo-msg-assistant .mo-bubble {
+  border-bottom-left-radius: 5px;
+  background: var(--mo-bg);
+  border: 1px solid var(--mo-border);
+}
+.mo-msg-text { margin: 0; }
+.mo-w { display: inline-block; opacity: 0; will-change: opacity, transform, filter; }
+
+.mo-typing { display: inline-flex; align-items: center; gap: 4px; height: 20px; }
+.mo-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--mo-brand); animation: moDot 1.1s ease-in-out infinite; }
+.mo-typing i:nth-child(2) { animation-delay: 0.15s; }
+.mo-typing i:nth-child(3) { animation-delay: 0.3s; }
+
+.mo-products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.mo-product {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--mo-border);
+  border-radius: 12px;
+  background: var(--mo-surface);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s, background 0.2s;
+}
+.mo-product:hover { border-color: var(--mo-brand); background: var(--mo-brand-soft); transform: translateY(-1px); }
+.mo-product:focus-visible { outline: 2px solid var(--mo-brand); outline-offset: 2px; }
+.mo-product-img {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 9px;
+  overflow: hidden;
+  background: radial-gradient(circle at 30% 25%, #e1e3e5, #f6f6f7);
+  display: grid;
+  place-items: center;
+}
+.mo-product-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mo-product-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mo-product-info strong { font-size: 12px; line-height: 15px; font-weight: 600; color: var(--mo-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mo-product-price { font-size: 12px; color: var(--mo-brand); font-weight: 600; font-variant-numeric: tabular-nums; }
+.mo-product-info small { font-size: 10px; }
+.mo-in { color: var(--mo-brand); }
+.mo-out { color: var(--mo-danger); }
+
+.mo-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.mo-suggestion {
+  padding: 6px 10px;
+  border: 1px solid var(--mo-brand-line);
+  border-radius: 999px;
+  background: var(--mo-brand-soft);
+  color: var(--mo-brand);
+  font: inherit;
+  font-size: 11px;
+  line-height: 15px;
+  cursor: pointer;
+}
+.mo-suggestion:hover:not(:disabled) { background: var(--mo-brand-tint); border-color: var(--mo-brand); }
+.mo-suggestion:disabled { opacity: 0.45; cursor: default; }
+.mo-suggestion:focus-visible { outline: 2px solid var(--mo-brand); outline-offset: 2px; }
+
+.mo-network,
+.mo-error {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.mo-network { background: rgba(216, 44, 13, 0.08); color: var(--mo-danger); border: 1px solid rgba(216, 44, 13, 0.25); }
+.mo-network i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--mo-danger); }
+.mo-error { justify-content: space-between; background: rgba(216, 44, 13, 0.08); color: var(--mo-danger); border: 1px solid rgba(216, 44, 13, 0.22); }
+.mo-error button {
+  flex: none;
+  padding: 4px 10px;
+  border: 1px solid rgba(216, 44, 13, 0.35);
+  border-radius: 999px;
+  background: var(--mo-surface);
+  color: var(--mo-danger);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.mo-error button:hover:not(:disabled) { background: rgba(216, 44, 13, 0.08); }
+
+.mo-composer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 46px;
+  padding: 0 6px 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--mo-border);
+  background: var(--mo-bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.mo-composer:focus-within { border-color: var(--mo-brand); box-shadow: 0 0 0 3px var(--mo-brand-tint); }
+.mo-composer .mo-field { font-size: 14px; }
+.mo-composer .mo-btn { width: 34px; height: 34px; }
+.mo-composer .mo-btn svg { width: 18px; height: 18px; }
+.mo-composer .mo-spark { display: none; }
+
+/* ───────── libellés d'état + bouton « nouvelle question » ───────── */
+.mo-status {
+  position: absolute;
+  left: 50%;
+  top: calc(46% + 104px);
+  translate: -50% 0;
+  display: grid;
+  justify-items: center;
+  font-size: 14px;
+  color: var(--mo-muted);
+  opacity: var(--sOp, 0);
+  transform: translateY(calc(var(--sTy, 6) * 1px));
+  pointer-events: none;
+}
+.mo-lab { grid-area: 1 / 1; display: inline-flex; align-items: center; white-space: nowrap; }
+.mo-in { animation: moIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.mo-out { animation: moOut 0.3s ease both; }
+@keyframes moIn { from { opacity: 0; transform: translateY(6px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes moOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-6px); filter: blur(3px); } }
+.mo-dots { display: inline-flex; margin-left: 3px; }
+.mo-dots i { width: 3px; height: 3px; margin-left: 3px; border-radius: 50%; background: currentColor; animation: moDot 1.2s ease-in-out infinite; }
+.mo-dots i:nth-child(2) { animation-delay: 0.15s; }
+.mo-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes moDot { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+.mo-lab-done { color: var(--mo-brand); }
+
+.mo-reset {
+  position: absolute;
+  left: 50%;
+  top: calc(46% + var(--ch, 108px) / 2 + 20px);
+  translate: -50% 0;
+  padding: 9px 18px;
+  border: 1px solid var(--mo-border);
+  border-radius: 999px;
+  background: var(--mo-surface);
+  color: var(--mo-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s 0.1s, background 0.2s;
+}
+.mo-root[data-phase="answered"] .mo-reset { opacity: 1; pointer-events: auto; }
+.mo-reset:hover { background: var(--mo-brand-soft); border-color: var(--mo-brand-line); }
+.mo-reset:focus-visible { outline: 2px solid var(--mo-brand); outline-offset: 2px; }
+
+.mo-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.mo-debug {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--mo-text);
+  border: 1px solid var(--mo-border);
+  font-size: 12px;
+  pointer-events: auto;
+}
+.mo-chip { padding: 2px 8px; border-radius: 999px; background: rgba(104, 213, 179, 0.22); color: var(--mo-brand-accent); }
+
+/* Mobile : une seule colonne de fiches et composeur compact. */
+@media (max-width: 560px) {
+  .mo-answer { padding: 12px 10px 10px; gap: 8px; }
+  .mo-bubble { max-width: 94%; padding: 9px 10px; font-size: 13px; line-height: 19px; }
+  .mo-products { grid-template-columns: minmax(0, 1fr); }
+  .mo-product-img { width: 46px; height: 46px; }
+  .mo-a-conv { display: none; }
+  .mo-a-new { padding: 3px 8px; }
+  .mo-composer { min-height: 42px; padding-left: 10px; }
+  .mo-status { top: calc(46% + 86px); font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mo-aurora i, .mo-root[data-phase="dock"] .mo-underglow, .mo-rec-dot, .mo-dots i, .mo-typing i { animation: none; }
+  .mo-in, .mo-out { animation-duration: 0.01s; }
+  .mo-product, .mo-btn { transition: none; }
+}
